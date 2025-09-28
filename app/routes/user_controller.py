@@ -6,19 +6,22 @@ class UserController(Controller):
     path = "api"
 
     @post(path="/users")
-    def create_user(email: str, username: str, password: str) -> AuthenticatedUser:
+    async def create_user(
+        self, email: str, username: str, password: str
+    ) -> AuthenticatedUser:
         pass
 
     @post(path="/users/login")
-    def login_user(email: str, password: str) -> AuthenticatedUser:
+    async def login_user(self, email: str, password: str) -> AuthenticatedUser:
         pass
 
     @get(path="/user")
-    def get_current_usert() -> AuthenticatedUser:
+    async def get_current_usert(self) -> AuthenticatedUser:
         pass
 
     @put(path="/user")
-    def update_user(
+    async def update_user(
+        self,
         email: str | None,
         username: str | None,
         password: str | None,

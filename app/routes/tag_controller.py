@@ -6,5 +6,5 @@ class TagController(Controller):
     path = "/api/tags"
 
     @get()
-    def get_tags() -> TagList:
+    async def get_tags(self) -> TagList:
         pass

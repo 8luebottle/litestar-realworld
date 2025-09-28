@@ -35,7 +35,7 @@ class Article(Struct):
 
 class ArticleList(Struct):
     articles: list[Article]
-    articlesCount: int
+    articles_count: int
 
 
 class Comment(Struct):

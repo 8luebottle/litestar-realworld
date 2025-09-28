@@ -6,7 +6,8 @@ class ArticleController(Controller):
     path = "api/articles"
 
     @get()
-    def get_articles(
+    async def get_articles(
+        self,
         tag: str | None,
         author: str | None,
         favorited: str | None,
@@ -16,45 +17,45 @@ class ArticleController(Controller):
         pass
 
     @get(path="/feed")
-    def get_article_feed(limit: int = 20, offset: int = 0) -> ArticleList:
+    async def get_article_feed(self, limit: int = 20, offset: int = 0) -> ArticleList:
         pass
 
     @get(path="/{slug:str}")
-    def get_article() -> Article:
+    async def get_article(self) -> Article:
         pass
 
     @post()
-    def create_article(
-        title: str, description: str, body: str, tag_list: list[str] | None
+    async def create_article(
+        self, title: str, description: str, body: str, tag_list: list[str] | None
     ) -> Article:
         pass
 
-    @put(path="{slug:str}")
-    def update_article(
-        title: str | None, description: str | None, body: str | None
+    @put(path="/{slug:str}")
+    async def update_article(
+        self, title: str | None, description: str | None, body: str | None
     ) -> Article:
         pass
 
     @delete(path="/{slug:str}")
-    def delete_article() -> Article:
+    async def delete_article(self) -> Article:
         pass
 
     @post(path="/{slug:str}/comments")
-    def add_comment() -> Comment:
+    async def add_comment(self) -> Comment:
         pass
 
     @get(path="/{slug:str}/comments")
-    def get_comments() -> CommentList:
+    async def get_comments(self) -> CommentList:
         pass
 
     @delete(path="/{slug:str}/comments/{id:int}")
-    def delete_comment() -> Comment:
+    async def delete_comment(self) -> Comment:
         pass
 
     @post(path="/{slug:str}/favorite")
-    def favorite_article() -> Article:
+    async def favorite_article(self) -> Article:
         pass
 
-    @post(path="/{slug:str}/favorite")
-    def unfavorite_article() -> Article:
+    @delete(path="/{slug:str}/favorite")
+    async def unfavorite_article(self) -> Article:
         pass

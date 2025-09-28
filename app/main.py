@@ -1,9 +1,34 @@
-from litestar import Litestar, get
+from contextlib import asynccontextmanager
+from litestar import Litestar
+from collections.abc import AsyncGenerator
+from .routes.article_controller import ArticleController
+from .routes.profile_controller import ProfileController
+from .routes.tag_controller import TagController
+from .routes.user_controller import UserController
+from .db.models import Base
+
+from sqlalchemy.ext.asyncio import create_async_engine
 
 
-@get("/")
-async def hello_world() -> str:
-    return "Hello, world!"
+@asynccontextmanager
+async def db_connection(app: Litestar) -> AsyncGenerator[None, None]:
+    engine = getattr(app.state, "engine", None)
+    if engine is None:
+        engine = create_async_engine(
+            "postgresql://testuser:testpass@localhost:5433/testdb", echo=True
+        )
+        app.state.engine = engine
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    try:
+        yield
+    finally:
+        await engine.dispose()
 
 
-app = Litestar([hello_world])
+app = Litestar(
+    [ArticleController, ProfileController, TagController, UserController],
+    lifespan=[db_connection],
+)

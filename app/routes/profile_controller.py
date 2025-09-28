@@ -6,13 +6,13 @@ class ProfileController(Controller):
     path = "api/profiles"
 
     @get(path="/{username:str}")
-    def get_profile() -> Profile:
+    async def get_profile(self) -> Profile:
         pass
 
     @post(path="/{username:str}/follow")
-    def follow_user() -> Profile:
+    async def follow_user(self) -> Profile:
         pass
 
     @delete(path="/{username:str}/follow")
-    def unfollow_user() -> Profile:
+    async def unfollow_user(self) -> Profile:
         pass

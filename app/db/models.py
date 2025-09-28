@@ -1,5 +1,6 @@
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import String
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import String, UUID, ForeignKey, DateTime, Integer
+from datetime import datetime
 
 
 class Base(DeclarativeBase):
@@ -7,10 +8,82 @@ class Base(DeclarativeBase):
 
 
 class User(Base):
-    __tablename__ = "user"
+    __tablename__ = "users"
 
-    username: Mapped[str] = mapped_column(String(30), primary_key=True)
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    username: Mapped[str] = mapped_column(String(30))
     email: Mapped[str] = mapped_column(String(100))
     password: Mapped[str] = mapped_column(String(100))
     bio: Mapped[str] = mapped_column(String(200))
     image: Mapped[str | None] = mapped_column(String(100))
+
+    comments: Mapped[set["Comment"]] = relationship()
+    follows: Mapped[set["UserFollow"]] = relationship()
+
+
+class Article(Base):
+    __tablename__ = "articles"
+
+    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    slug: Mapped[str] = mapped_column(String(150))
+    title: Mapped[str] = mapped_column(String(150))
+    description: Mapped[str] = mapped_column(String(250))
+    body: Mapped[str] = mapped_column(String(10_000))
+    created_at: Mapped[datetime] = mapped_column(DateTime)
+    updated_at: Mapped[datetime] = mapped_column(DateTime)
+    author: Mapped[str] = mapped_column(String(30), ForeignKey("users.id"))
+
+    comments: Mapped[set["Comment"]] = relationship()
+    article_tags: Mapped[set["ArticleTag"]] = relationship()
+
+
+class Comment(Base):
+    __tablename__ = "comments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime)
+    updated_at: Mapped[datetime] = mapped_column(DateTime)
+    body: Mapped[str] = mapped_column(String(500))
+    article_id: Mapped[UUID] = mapped_column(ForeignKey("articles.id"))
+    author_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+
+
+class Tag(Base):
+    __tablename__ = "tags"
+
+    tag: Mapped[str] = mapped_column(String(30), primary_key=True)
+
+    article_tags: Mapped[set["ArticleTag"]] = relationship()
+
+
+class ArticleTag(Base):
+    __tablename__ = "article_tags"
+
+    article_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("articles.id"), primary_key=True
+    )
+    tag: Mapped[str] = mapped_column(
+        String(30), ForeignKey("tags.tag"), primary_key=True
+    )
+
+
+class UserFavorite(Base):
+    __tablename__ = "user_favorites"
+
+    user_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True
+    )
+    article_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("articles.id"), primary_key=True
+    )
+
+
+class UserFollow(Base):
+    __tablename__ = "user_follows"
+
+    followed_user_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True
+    )
+    follower_user_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True
+    )
