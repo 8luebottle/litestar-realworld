@@ -15,7 +15,7 @@ async def db_connection(app: Litestar) -> AsyncGenerator[None, None]:
     engine = getattr(app.state, "engine", None)
     if engine is None:
         engine = create_async_engine(
-            "postgresql://testuser:testpass@localhost:5433/testdb", echo=True
+            "postgresql+psycopg://testuser:testpass@localhost:5433/testdb", echo=True
         )
         app.state.engine = engine
 

@@ -31,7 +31,7 @@ class Article(Base):
     body: Mapped[str] = mapped_column(String(10_000))
     created_at: Mapped[datetime] = mapped_column(DateTime)
     updated_at: Mapped[datetime] = mapped_column(DateTime)
-    author: Mapped[str] = mapped_column(String(30), ForeignKey("users.id"))
+    author: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
 
     comments: Mapped[set["Comment"]] = relationship()
     article_tags: Mapped[set["ArticleTag"]] = relationship()
