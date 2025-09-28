@@ -1,18 +1,17 @@
 from litestar import Controller, post, get, put
-from app.schemas import AuthenticatedUser
+from app.schemas.response_schemas import AuthenticatedUser
+from app.schemas.request_schemas import CreateUserType, LoginUserType, UpdateUserType
 
 
 class UserController(Controller):
     path = "api"
 
     @post(path="/users")
-    async def create_user(
-        self, email: str, username: str, password: str
-    ) -> AuthenticatedUser:
+    async def create_user(self, data: CreateUserType) -> AuthenticatedUser:
         pass
 
     @post(path="/users/login")
-    async def login_user(self, email: str, password: str) -> AuthenticatedUser:
+    async def login_user(self, data: LoginUserType) -> AuthenticatedUser:
         pass
 
     @get(path="/user")
@@ -20,12 +19,5 @@ class UserController(Controller):
         pass
 
     @put(path="/user")
-    async def update_user(
-        self,
-        email: str | None,
-        username: str | None,
-        password: str | None,
-        image: str | None,
-        bio: str | None,
-    ) -> AuthenticatedUser:
+    async def update_user(self, data: UpdateUserType) -> AuthenticatedUser:
         pass

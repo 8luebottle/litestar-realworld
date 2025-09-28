@@ -1,5 +1,5 @@
 from litestar import Controller, get
-from app.schemas import TagList
+from app.schemas.response_schemas import TagList
 
 
 class TagController(Controller):

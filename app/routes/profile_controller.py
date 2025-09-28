@@ -1,5 +1,5 @@
 from litestar import Controller, post, get, delete
-from app.schemas import Profile
+from app.schemas.response_schemas import Profile
 
 
 class ProfileController(Controller):
@@ -14,5 +14,5 @@ class ProfileController(Controller):
         pass
 
     @delete(path="/{username:str}/follow")
-    async def unfollow_user(self) -> Profile:
+    async def unfollow_user(self) -> None:
         pass

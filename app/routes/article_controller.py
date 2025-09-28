@@ -1,23 +1,22 @@
 from litestar import Controller, get, post, put, delete
-from app.schemas import ArticleList, Article, Comment, CommentList
+from app.schemas.response_schemas import ArticleList, Article, Comment, CommentList
+from app.schemas.request_schemas import (
+    GetArticlesType,
+    GetFeedType,
+    CreateArticleType,
+    UpdateArticleType,
+)
 
 
 class ArticleController(Controller):
     path = "api/articles"
 
     @get()
-    async def get_articles(
-        self,
-        tag: str | None,
-        author: str | None,
-        favorited: str | None,
-        limit: int = 20,
-        offset: int = 0,
-    ) -> ArticleList:
+    async def get_articles(self, query: GetArticlesType) -> ArticleList:
         pass
 
     @get(path="/feed")
-    async def get_article_feed(self, limit: int = 20, offset: int = 0) -> ArticleList:
+    async def get_article_feed(self, query: GetFeedType) -> ArticleList:
         pass
 
     @get(path="/{slug:str}")
@@ -25,19 +24,15 @@ class ArticleController(Controller):
         pass
 
     @post()
-    async def create_article(
-        self, title: str, description: str, body: str, tag_list: list[str] | None
-    ) -> Article:
+    async def create_article(self, data: CreateArticleType) -> Article:
         pass
 
     @put(path="/{slug:str}")
-    async def update_article(
-        self, title: str | None, description: str | None, body: str | None
-    ) -> Article:
+    async def update_article(self, data: UpdateArticleType) -> Article:
         pass
 
     @delete(path="/{slug:str}")
-    async def delete_article(self) -> Article:
+    async def delete_article(self) -> None:
         pass
 
     @post(path="/{slug:str}/comments")
@@ -49,7 +44,7 @@ class ArticleController(Controller):
         pass
 
     @delete(path="/{slug:str}/comments/{id:int}")
-    async def delete_comment(self) -> Comment:
+    async def delete_comment(self) -> None:
         pass
 
     @post(path="/{slug:str}/favorite")
@@ -57,5 +52,5 @@ class ArticleController(Controller):
         pass
 
     @delete(path="/{slug:str}/favorite")
-    async def unfavorite_article(self) -> Article:
+    async def unfavorite_article(self) -> None:
         pass
