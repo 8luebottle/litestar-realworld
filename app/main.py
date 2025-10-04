@@ -31,4 +31,5 @@ async def db_connection(app: Litestar) -> AsyncGenerator[None, None]:
 app = Litestar(
     [ArticleController, ProfileController, TagController, UserController],
     lifespan=[db_connection],
+    debug=True,
 )

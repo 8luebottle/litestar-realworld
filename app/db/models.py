@@ -1,6 +1,7 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import String, UUID, ForeignKey, DateTime, Integer
 from datetime import datetime
+from uuid import uuid4
 
 
 class Base(DeclarativeBase):
@@ -10,7 +11,9 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid4
+    )
     username: Mapped[str] = mapped_column(String(30))
     email: Mapped[str] = mapped_column(String(100))
     password: Mapped[str] = mapped_column(String(100))
@@ -18,7 +21,16 @@ class User(Base):
     image: Mapped[str | None] = mapped_column(String(100))
 
     comments: Mapped[set["Comment"]] = relationship()
-    follows: Mapped[set["UserFollow"]] = relationship()
+    followers: Mapped[list["UserFollow"]] = relationship(
+        "UserFollow",
+        foreign_keys="UserFollow.followed_user_id",
+        back_populates="followed_user",
+    )
+    following: Mapped[list["UserFollow"]] = relationship(
+        "UserFollow",
+        foreign_keys="UserFollow.follower_user_id",
+        back_populates="follower_user",
+    )
 
 
 class Article(Base):
@@ -86,4 +98,11 @@ class UserFollow(Base):
     )
     follower_user_id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True
+    )
+
+    followed_user: Mapped["User"] = relationship(
+        "User", foreign_keys=[followed_user_id], back_populates="followers"
+    )
+    follower_user: Mapped["User"] = relationship(
+        "User", foreign_keys=[follower_user_id], back_populates="following"
     )
