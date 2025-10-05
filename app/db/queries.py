@@ -1,10 +1,11 @@
+from litestar.exceptions import NotFoundException
+from sqlalchemy import select
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.models import User
 from app.schemas.request_schemas import CreateUserType, LoginUserType, UpdateUserType
 from app.schemas.response_schemas import AuthenticatedUser
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from app.db.models import User
-from sqlalchemy.exc import NoResultFound
-from litestar.exceptions import NotFoundException
 
 
 class UserQueries:

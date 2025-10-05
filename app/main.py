@@ -1,13 +1,14 @@
-from contextlib import asynccontextmanager
-from litestar import Litestar
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+
+from litestar import Litestar
+from sqlalchemy.ext.asyncio import create_async_engine
+
+from .db.models import Base
 from .routes.article_controller import ArticleController
 from .routes.profile_controller import ProfileController
 from .routes.tag_controller import TagController
 from .routes.user_controller import UserController
-from .db.models import Base
-
-from sqlalchemy.ext.asyncio import create_async_engine
 
 
 @asynccontextmanager

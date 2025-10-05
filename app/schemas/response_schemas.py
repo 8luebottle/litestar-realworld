@@ -1,5 +1,6 @@
-from msgspec import Struct
 from datetime import datetime
+
+from msgspec import Struct
 
 
 class User(Struct):

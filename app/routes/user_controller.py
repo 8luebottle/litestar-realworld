@@ -1,11 +1,11 @@
-from litestar import Controller, post, get, put
+from litestar import Controller, get, post, put
 from litestar.datastructures import State
 from sqlalchemy.ext.asyncio import async_sessionmaker
-from app.schemas.response_schemas import AuthenticatedUser
-from app.schemas.request_schemas import CreateUserType, LoginUserType, UpdateUserType
+
 from app.db.models import User
 from app.db.queries import UserQueries
-
+from app.schemas.request_schemas import CreateUserType, LoginUserType, UpdateUserType
+from app.schemas.response_schemas import AuthenticatedUser
 
 sessionmaker = async_sessionmaker(expire_on_commit=False)
 

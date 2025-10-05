@@ -10,3 +10,6 @@ dependencies = [
     "ruff>=0.13.2",
     "sqlalchemy>=2.0.43",
 ]
+
+[tool.ruff.lint]
+extend-select = ["I"]

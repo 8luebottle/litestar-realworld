@@ -1,4 +1,5 @@
-from litestar import Controller, post, get, delete
+from litestar import Controller, delete, get, post
+
 from app.schemas.response_schemas import Profile
 
 
