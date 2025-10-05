@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from app.schemas.response_schemas import AuthenticatedUser
 from app.schemas.request_schemas import CreateUserType, LoginUserType, UpdateUserType
 from app.db.models import User
+from app.db.queries import UserQueries
 
 
 sessionmaker = async_sessionmaker(expire_on_commit=False)
@@ -31,8 +32,10 @@ class UserController(Controller):
         )
 
     @post(path="/users/login")
-    async def login_user(self, data: LoginUserType) -> AuthenticatedUser:
-        pass
+    async def login_user(self, data: LoginUserType, state: State) -> AuthenticatedUser:
+        async with sessionmaker(bind=state.engine) as session:
+            user = await UserQueries.get(data, session)
+            return user
 
     @get(path="/user")
     async def get_current_usert(self) -> AuthenticatedUser:
