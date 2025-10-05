@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from litestar.exceptions import NotFoundException
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
@@ -34,6 +36,22 @@ class UserQueries:
             raise NotFoundException(
                 detail=f"User with {user.email=} and {user.password} not found."
             ) from e
+
+    @classmethod
+    async def get_by_id(cls, id: uuid4, session: AsyncSession) -> AuthenticatedUser:
+        query = select(User).where(User.id == id)
+        result = await session.execute(query)
+        try:
+            authed_user = result.scalar_one()
+            return AuthenticatedUser(
+                email=authed_user.email,
+                username=authed_user.username,
+                bio=authed_user.bio,
+                image=authed_user.image,
+                token="dummy_token",
+            )
+        except NoResultFound as e:
+            raise NotFoundException(detail=f"User with {id=} not found.") from e
 
     @classmethod
     async def update(

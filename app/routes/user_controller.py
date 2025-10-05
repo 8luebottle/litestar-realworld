@@ -13,7 +13,7 @@ sessionmaker = async_sessionmaker(expire_on_commit=False)
 class UserController(Controller):
     path = "api"
 
-    @post(path="/users")
+    @post(path="/users", exclude_from_auth=True)
     async def create_user(
         self, data: CreateUserType, state: State
     ) -> AuthenticatedUser:

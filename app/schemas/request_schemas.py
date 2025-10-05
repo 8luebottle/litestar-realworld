@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from msgspec import Struct
 
 
@@ -44,3 +46,8 @@ class UpdateUserType(Struct):
     password: str | None
     image: str | None
     bio: str | None
+
+
+class Token(Struct):
+    sub: uuid4
+    exp: int
