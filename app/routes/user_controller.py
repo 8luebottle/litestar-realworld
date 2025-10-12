@@ -64,5 +64,10 @@ class UserController(Controller):
         )
 
     @put(path="/user")
-    async def update_user(self, data: UpdateUserType) -> AuthenticatedUser:
-        pass
+    async def update_user(
+        self, data: UpdateUserType, request: Request[User, Token, Any], state: State
+    ) -> AuthenticatedUser:
+        async with sessionmaker(bind=state.engine) as session:
+            updated_user = await UserQueries.update(request.auth.sub, data, session)
+        updated_user.token = request.auth.encode(SECRET, ALGORITHM)
+        return updated_user
