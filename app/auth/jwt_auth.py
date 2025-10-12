@@ -7,6 +7,7 @@ from app.db.models import User
 from app.db.queries import UserQueries
 
 SECRET = "dummy-secret"
+ALGORITHM = "HS256"
 
 
 async def retrieve_user_handler(token: Token, connection: ASGIConnection) -> User:
@@ -23,4 +24,5 @@ async def retrieve_user_handler(token: Token, connection: ASGIConnection) -> Use
 jwt_auth = JWTAuth[User, Token](
     token_secret=SECRET,
     retrieve_user_handler=retrieve_user_handler,
+    exclude=["/schema", "/api/users", "api/users/login"],
 )

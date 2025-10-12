@@ -18,19 +18,24 @@ class UserQueries:
         pass
 
     @classmethod
-    async def get(cls, user: LoginUserType, session: AsyncSession) -> AuthenticatedUser:
+    async def get(
+        cls, user: LoginUserType, session: AsyncSession
+    ) -> tuple[AuthenticatedUser, str]:
         query = select(User).where(
             User.email == user.email and User.password == user.password
         )
         result = await session.execute(query)
         try:
             authed_user = result.scalar_one()
-            return AuthenticatedUser(
-                email=authed_user.email,
-                username=authed_user.username,
-                bio=authed_user.bio,
-                image=authed_user.image,
-                token="dummy_token",
+            return (
+                AuthenticatedUser(
+                    email=authed_user.email,
+                    username=authed_user.username,
+                    bio=authed_user.bio,
+                    image=authed_user.image,
+                    token="dummy_token",
+                ),
+                str(authed_user.id),
             )
         except NoResultFound as e:
             raise NotFoundException(

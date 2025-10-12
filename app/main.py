@@ -2,6 +2,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from litestar import Litestar
+from litestar.openapi.config import OpenAPIConfig
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from .auth.jwt_auth import jwt_auth
@@ -30,9 +31,15 @@ async def db_connection(app: Litestar) -> AsyncGenerator[None, None]:
         await engine.dispose()
 
 
+openapi_config = OpenAPIConfig(
+    title="Litestar-RealWorld",
+    version="0.0.0",
+)
+
 app = Litestar(
     [ArticleController, ProfileController, TagController, UserController],
     lifespan=[db_connection],
-    security=[jwt_auth],
+    on_app_init=[jwt_auth.on_app_init],
+    openapi_config=openapi_config,
     debug=True,
 )
