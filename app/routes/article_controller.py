@@ -1,4 +1,5 @@
 from typing import Any
+from uuid import UUID
 
 from litestar import Controller, Request, delete, get, post, put
 from litestar.datastructures import State
@@ -49,7 +50,7 @@ class ArticleController(Controller):
                 request.auth.sub, data, session
             )
             tags = [tag.tag for tag in new_article.article_tags]
-            author = await UserQueries.get_by_id(request.auth.sub, session)
+            author = await UserQueries.get_by_id(UUID(request.auth.sub), session)
             profile = ProfileResponse(
                 username=author.username,
                 bio=author.bio,
