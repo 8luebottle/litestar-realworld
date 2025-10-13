@@ -1,4 +1,4 @@
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from litestar.exceptions import NotFoundException
 from sqlalchemy import select
@@ -38,7 +38,7 @@ class UserQueries:
 
     @classmethod
     async def get_by_id(
-        cls, id: uuid4, session: AsyncSession
+        cls, id: UUID, session: AsyncSession
     ) -> AuthenticatedUserResponse:
         query = select(User).where(User.id == id)
         result = await session.execute(query)
@@ -55,7 +55,7 @@ class UserQueries:
             raise NotFoundException(detail=f"User with {id=} not found.") from e
 
     @classmethod
-    async def get_user_by_id(cls, id: uuid4, session: AsyncSession) -> User:
+    async def get_user_by_id(cls, id: UUID, session: AsyncSession) -> User:
         query = select(User).where(User.id == id)
         result = await session.execute(query)
         try:

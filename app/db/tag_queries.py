@@ -22,9 +22,9 @@ class TagQueries:
     @classmethod
     async def get_tag(cls, tag: str, session: AsyncSession) -> Tag | None:
         result = await session.execute(select(Tag).where(Tag.tag == tag))
-        tag = result.scalar_one_or_none()
-        if tag:
-            return tag
+        tag_found = result.scalar_one_or_none()
+        if tag_found:
+            return tag_found
         return None
 
     @classmethod
@@ -33,11 +33,11 @@ class TagQueries:
         if result:
             return result
 
-        tag = Tag(tag=tag)
+        new_tag = Tag(tag=tag)
         session.add(tag)
         try:
             await session.flush()
         except IntegrityError:
             await session.rollback()
-            result = await cls.get_tag(tag, session)
-        return tag
+            new_tag = await cls.get_tag(tag, session)
+        return new_tag

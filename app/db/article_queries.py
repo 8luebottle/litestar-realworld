@@ -20,7 +20,6 @@ class ArticleQueries:
     ) -> Article:
         slug = slugify(article.title)
         created_at = datetime.now()
-        article.tag_list = set(article.tag_list)
 
         new_article = Article(
             slug=slug,
@@ -36,6 +35,7 @@ class ArticleQueries:
         await session.flush()
 
         if article.tag_list:
+            article.tag_list = list(set(article.tag_list))
             await TagQueries.add_article_tags(new_article.id, article.tag_list, session)
 
         await session.refresh(new_article)
