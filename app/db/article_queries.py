@@ -80,4 +80,9 @@ class ArticleQueries:
 
     @classmethod
     async def delete_article(cls, slug: str, session: AsyncSession) -> None:
-        pass
+        article_to_delete = await session.scalar(
+            select(Article).where(Article.slug == slug)
+        )
+        await session.delete(article_to_delete)
+        await session.commit()
+        return

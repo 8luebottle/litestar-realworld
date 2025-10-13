@@ -138,8 +138,18 @@ class ArticleController(Controller):
             )
 
     @delete(path="/{slug:str}")
-    async def delete_article(self) -> None:
-        pass
+    async def delete_article(
+        self, slug: str, request: Request[User, Token, Any], state: State
+    ) -> None:
+        async with sessionmaker(bind=state.engine) as session:
+            article = await ArticleQueries.get_article_by_slug(slug, session)
+            if article is None:
+                raise NotFoundException(f"No article with {slug=} found")
+            if str(article.author) != request.auth.sub:
+                raise NotAuthorizedException("User not authorized to delete article")
+
+            await ArticleQueries.delete_article(slug, session)
+        return
 
     @post(path="/{slug:str}/comments")
     async def add_comment(self) -> CommentResponse:

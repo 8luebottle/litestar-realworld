@@ -49,7 +49,9 @@ class Article(Base):
     author: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
 
     comments: Mapped[set["Comment"]] = relationship()
-    article_tags: Mapped[set["ArticleTag"]] = relationship(lazy="joined")
+    article_tags: Mapped[set["ArticleTag"]] = relationship(
+        lazy="selectin", cascade="all, delete-orphan"
+    )
 
 
 class Comment(Base):
@@ -74,12 +76,11 @@ class Tag(Base):
 class ArticleTag(Base):
     __tablename__ = "article_tags"
 
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     article_id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("articles.id"), primary_key=True
+        UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE")
     )
-    tag: Mapped[str] = mapped_column(
-        String(30), ForeignKey("tags.tag"), primary_key=True
-    )
+    tag: Mapped[str] = mapped_column(String(30), ForeignKey("tags.tag"))
 
 
 class UserFavorite(Base):
