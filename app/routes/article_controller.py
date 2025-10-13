@@ -3,7 +3,7 @@ from uuid import UUID
 
 from litestar import Controller, Request, delete, get, post, put
 from litestar.datastructures import State
-from litestar.exceptions import NotFoundException
+from litestar.exceptions import NotAuthorizedException, NotFoundException
 from litestar.security.jwt import Token
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -100,8 +100,42 @@ class ArticleController(Controller):
         return article_to_return
 
     @put(path="/{slug:str}")
-    async def update_article(self, data: UpdateArticleType) -> ArticleResponse:
-        pass
+    async def update_article(
+        self,
+        slug: str,
+        data: UpdateArticleType,
+        request: Request[User, Token, Any],
+        state: State,
+    ) -> ArticleResponse:
+        async with sessionmaker(bind=state.engine) as session:
+            article = await ArticleQueries.get_article_by_slug(slug, session)
+            if article is None:
+                raise NotFoundException(f"No article with {slug=} found")
+            if str(article.author) != request.auth.sub:
+                raise NotAuthorizedException("User not authorized to update article")
+
+            updated_article = await ArticleQueries.update_article(slug, data, session)
+            tags = [tag.tag for tag in updated_article.article_tags]
+            author = await UserQueries.get_by_id(UUID(request.auth.sub), session)
+            profile = ProfileResponse(
+                username=author.username,
+                bio=author.bio,
+                image=author.image,
+                following=True,  # TODO: true if author follows themselves, otherwise false.
+            )
+
+            return ArticleResponse(
+                slug=updated_article.slug,
+                title=updated_article.title,
+                description=updated_article.description,
+                body=updated_article.body,
+                tag_list=tags,
+                created_at=updated_article.created_at,
+                updated_at=updated_article.updated_at,
+                favorited=False,  # TODO: true if author follows themselves, otherwise false.
+                favorites_count=0,  # TODO: true if author favorited this article.
+                author=profile,
+            )
 
     @delete(path="/{slug:str}")
     async def delete_article(self) -> None:

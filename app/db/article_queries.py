@@ -59,7 +59,24 @@ class ArticleQueries:
     async def update_article(
         cls, slug: str, updates: UpdateArticleType, session: AsyncSession
     ) -> Article:
-        pass
+        article_to_update = await cls.get_article_by_slug(slug, session)
+
+        new_slug = article_to_update.slug
+        if updates.title is not None:
+            new_slug = slugify(updates.title)
+            article_to_update.slug = new_slug
+            article_to_update.title = updates.title
+        if updates.description is not None:
+            article_to_update.description = updates.description
+        if updates.body is not None:
+            article_to_update.body = updates.body
+
+        if any([updates.title, updates.description, updates.body]):
+            article_to_update.updated_at = datetime.now()
+
+        await session.commit()
+        await session.refresh(article_to_update)
+        return article_to_update
 
     @classmethod
     async def delete_article(cls, slug: str, session: AsyncSession) -> None:
