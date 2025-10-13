@@ -16,4 +16,7 @@ dev:
 ruff:
 	ruff check --fix && ruff format
 
+ty:
+	ty check
+
 reload: down up dev
