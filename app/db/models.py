@@ -16,7 +16,7 @@ class User(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid4
     )
     username: Mapped[str] = mapped_column(String(30))
-    email: Mapped[str] = mapped_column(String(100))
+    email: Mapped[str] = mapped_column(String(100))  # TODO: needs to be unique
     password: Mapped[str] = mapped_column(String(100))
     bio: Mapped[str] = mapped_column(String(200))
     image: Mapped[str | None] = mapped_column(String(100))
@@ -37,7 +37,9 @@ class User(Base):
 class Article(Base):
     __tablename__ = "articles"
 
-    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid4
+    )
     slug: Mapped[str] = mapped_column(String(150))
     title: Mapped[str] = mapped_column(String(150))
     description: Mapped[str] = mapped_column(String(250))
@@ -47,7 +49,7 @@ class Article(Base):
     author: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
 
     comments: Mapped[set["Comment"]] = relationship()
-    article_tags: Mapped[set["ArticleTag"]] = relationship()
+    article_tags: Mapped[set["ArticleTag"]] = relationship(lazy="joined")
 
 
 class Comment(Base):

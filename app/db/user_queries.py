@@ -7,14 +7,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import User
 from app.schemas.request_schemas import LoginUserType, UpdateUserType
-from app.schemas.response_schemas import AuthenticatedUser
+from app.schemas.response_schemas import AuthenticatedUserResponse
 
 
 class UserQueries:
     @classmethod
     async def get(
         cls, user: LoginUserType, session: AsyncSession
-    ) -> tuple[AuthenticatedUser, str]:
+    ) -> tuple[AuthenticatedUserResponse, str]:
         query = select(User).where(
             User.email == user.email and User.password == user.password
         )
@@ -22,7 +22,7 @@ class UserQueries:
         try:
             authed_user = result.scalar_one()
             return (
-                AuthenticatedUser(
+                AuthenticatedUserResponse(
                     email=authed_user.email,
                     username=authed_user.username,
                     bio=authed_user.bio,
@@ -37,12 +37,14 @@ class UserQueries:
             ) from e
 
     @classmethod
-    async def get_by_id(cls, id: uuid4, session: AsyncSession) -> AuthenticatedUser:
+    async def get_by_id(
+        cls, id: uuid4, session: AsyncSession
+    ) -> AuthenticatedUserResponse:
         query = select(User).where(User.id == id)
         result = await session.execute(query)
         try:
             authed_user = result.scalar_one()
-            return AuthenticatedUser(
+            return AuthenticatedUserResponse(
                 email=authed_user.email,
                 username=authed_user.username,
                 bio=authed_user.bio,
@@ -64,7 +66,7 @@ class UserQueries:
     @classmethod
     async def update(
         cls, id: str, user: UpdateUserType, session: AsyncSession
-    ) -> AuthenticatedUser:
+    ) -> AuthenticatedUserResponse:
         user_to_update = await cls.get_user_by_id(UUID(id), session)
 
         if user.username is not None:
@@ -81,7 +83,7 @@ class UserQueries:
         await session.commit()
 
         updated_user = await cls.get_by_id(UUID(id), session)
-        return AuthenticatedUser(
+        return AuthenticatedUserResponse(
             email=updated_user.email,
             username=updated_user.username,
             bio=updated_user.bio,
