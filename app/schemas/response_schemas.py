@@ -3,25 +3,25 @@ from datetime import datetime
 from msgspec import Struct
 
 
-class User(Struct):
+class UserResponse(Struct):
     email: str
     username: str
     bio: str
     image: str | None
 
 
-class AuthenticatedUser(User):
+class AuthenticatedUserResponse(UserResponse):
     token: str
 
 
-class Profile(Struct):
+class ProfileResponse(Struct):
     username: str
     bio: str
     image: str | None
     following: bool
 
 
-class Article(Struct):
+class ArticleResponse(Struct):
     slug: str
     title: str
     description: str
@@ -31,25 +31,25 @@ class Article(Struct):
     updated_at: datetime
     favorited: bool
     favorites_count: int
-    author: Profile
+    author: ProfileResponse
 
 
-class ArticleList(Struct):
-    articles: list[Article]
+class ArticleListResponse(Struct):
+    articles: list[ArticleResponse]
     articles_count: int
 
 
-class Comment(Struct):
+class CommentResponse(Struct):
     id: int
     created_at: datetime
     updated_at: datetime
     body: str
-    author: Profile
+    author: ProfileResponse
 
 
-class CommentList(Struct):
-    comments: list[Comment]
+class CommentListResponse(Struct):
+    comments: list[CommentResponse]
 
 
-class TagList(Struct):
+class TagListResponse(Struct):
     tags: list[str]
