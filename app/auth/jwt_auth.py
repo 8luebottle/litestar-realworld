@@ -5,12 +5,15 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.db.models import User
 from app.db.user_queries import UserQueries
+from app.schemas.response_schemas import AuthenticatedUserResponse
 
 SECRET = "dummy-secret"
 ALGORITHM = "HS256"
 
 
-async def retrieve_user_handler(token: Token, connection: ASGIConnection) -> User:
+async def retrieve_user_handler(
+    token: Token, connection: ASGIConnection
+) -> AuthenticatedUserResponse:
     state = connection.app.state
     sessionmaker = async_sessionmaker(expire_on_commit=False)
     async with sessionmaker(bind=state.engine) as session:
