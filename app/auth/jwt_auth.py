@@ -4,7 +4,7 @@ from litestar.security.jwt import JWTAuth, Token
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.db.models import User
-from app.db.queries import UserQueries
+from app.db.user_queries import UserQueries
 
 SECRET = "dummy-secret"
 ALGORITHM = "HS256"
