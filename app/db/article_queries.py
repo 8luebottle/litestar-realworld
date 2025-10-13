@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from slugify import slugify
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import Article
@@ -42,8 +43,11 @@ class ArticleQueries:
         return new_article
 
     @classmethod
-    async def get_article_by_slug(cls, slug: str, session: AsyncSession) -> Article:
-        pass
+    async def get_article_by_slug(
+        cls, slug: str, session: AsyncSession
+    ) -> Article | None:
+        result = await session.execute(select(Article).where(Article.slug == slug))
+        return result.unique().scalar_one_or_none()
 
     @classmethod
     async def get_articles(

@@ -34,7 +34,7 @@ class TagQueries:
             return result
 
         new_tag = Tag(tag=tag)
-        session.add(tag)
+        session.add(new_tag)
         try:
             await session.flush()
         except IntegrityError:

@@ -40,7 +40,7 @@ class Article(Base):
     id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid4
     )
-    slug: Mapped[str] = mapped_column(String(150))
+    slug: Mapped[str] = mapped_column(String(150), unique=True)
     title: Mapped[str] = mapped_column(String(150))
     description: Mapped[str] = mapped_column(String(250))
     body: Mapped[str] = mapped_column(String(10_000))

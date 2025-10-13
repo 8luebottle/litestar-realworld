@@ -3,6 +3,7 @@ from uuid import UUID
 
 from litestar import Controller, Request, delete, get, post, put
 from litestar.datastructures import State
+from litestar.exceptions import NotFoundException
 from litestar.security.jwt import Token
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -37,9 +38,34 @@ class ArticleController(Controller):
     async def get_article_feed(self, query: GetFeedType) -> ArticleListResponse:
         pass
 
-    @get(path="/{slug:str}")
-    async def get_article(self) -> ArticleResponse:
-        pass
+    @get(path="/{slug:str}", exclude_from_auth=True)
+    async def get_article(self, slug: str, state: State) -> ArticleResponse:
+        # TODO: determine if authentication is present or not
+        async with sessionmaker(bind=state.engine) as session:
+            article = await ArticleQueries.get_article_by_slug(slug, session)
+            if article is None:
+                raise NotFoundException(f"No article with {slug=} found")
+            tags = [tag.tag for tag in article.article_tags]
+            author = await UserQueries.get_by_id(article.author, session)
+            profile = ProfileResponse(
+                username=author.username,
+                bio=author.bio,
+                image=author.image,
+                following=False,  # TODO: true if author follows themselves, otherwise false.
+            )
+
+            return ArticleResponse(
+                slug=article.slug,
+                title=article.title,
+                description=article.description,
+                body=article.body,
+                tag_list=tags,
+                created_at=article.created_at,
+                updated_at=article.updated_at,
+                favorited=False,
+                favorites_count=0,
+                author=profile,
+            )
 
     @post()
     async def create_article(
