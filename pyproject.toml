@@ -10,6 +10,7 @@ dependencies = [
     "python-slugify>=8.0.4",
     "ruff>=0.13.2",
     "sqlalchemy>=2.0.43",
+    "ty>=0.0.1a22",
 ]
 
 [tool.ruff.lint]
