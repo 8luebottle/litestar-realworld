@@ -21,7 +21,7 @@ class User(Base):
     bio: Mapped[str] = mapped_column(String(200))
     image: Mapped[str | None] = mapped_column(String(100))
 
-    comments: Mapped[set["Comment"]] = relationship()
+    comments: Mapped[set["Comment"]] = relationship(cascade="all, delete-orphan")
     followers: Mapped[list["UserFollow"]] = relationship(
         "UserFollow",
         foreign_keys="UserFollow.followed_user_id",
@@ -48,7 +48,7 @@ class Article(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime)
     author: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
 
-    comments: Mapped[set["Comment"]] = relationship()
+    comments: Mapped[set["Comment"]] = relationship(lazy="selectin", cascade="all, delete-orphan")
     article_tags: Mapped[set["ArticleTag"]] = relationship(
         lazy="selectin", cascade="all, delete-orphan"
     )
@@ -57,12 +57,12 @@ class Article(Base):
 class Comment(Base):
     __tablename__ = "comments"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     created_at: Mapped[datetime] = mapped_column(DateTime)
     updated_at: Mapped[datetime] = mapped_column(DateTime)
     body: Mapped[str] = mapped_column(String(500))
-    article_id: Mapped[UUID] = mapped_column(ForeignKey("articles.id"))
-    author_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    article_id: Mapped[UUID] = mapped_column(ForeignKey("articles.id"), ondelete="CASCADE")
+    author_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), ondelete="CASCADE")
 
 
 class Tag(Base):

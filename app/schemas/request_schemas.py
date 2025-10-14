@@ -44,3 +44,11 @@ class UpdateUserType(Struct):
     password: str | None
     image: str | None
     bio: str | None
+
+
+class CommentBodyType(Struct):
+    body: str
+
+
+class CommentType(Struct):
+    comment: CommentBodyType

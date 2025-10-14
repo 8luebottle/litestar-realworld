@@ -40,6 +40,7 @@ class ArticleQueries:
             await TagQueries.add_article_tags(new_article.id, article.tag_list, session)
 
         await session.refresh(new_article)
+        await session.commit()
         return new_article
 
     @classmethod

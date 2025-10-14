@@ -10,7 +10,9 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from app.db.article_queries import ArticleQueries
 from app.db.models import User
 from app.db.user_queries import UserQueries
+from app.db.comment_queries import CommentQueries
 from app.schemas.request_schemas import (
+    CommentType,
     CreateArticleType,
     GetArticlesType,
     GetFeedType,
@@ -152,10 +154,20 @@ class ArticleController(Controller):
         return
 
     @post(path="/{slug:str}/comments")
-    async def add_comment(self) -> CommentResponse:
-        pass
+    async def add_comment(
+        self,
+        slug: str,
+        data: CommentType,
+        request: Request[User, Token, Any],
+        state: State,
+    ) -> CommentResponse:
+        async with sessionmaker(bind=state.engine) as session:
+            article = await ArticleQueries.get_article_by_slug(slug, session)
+            if article is None:
+                raise NotFoundException(f"No article with {slug=} found")
+            new_comment = CommentQueries.create_comment(data, article.id, session)
 
-    @get(path="/{slug:str}/comments")
+    @get(path="/{slug:str}/comments", exclude_from_auth=True)
     async def get_comments(self) -> CommentListResponse:
         pass
 
