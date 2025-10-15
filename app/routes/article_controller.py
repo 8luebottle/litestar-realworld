@@ -8,9 +8,9 @@ from litestar.security.jwt import Token
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.db.article_queries import ArticleQueries
+from app.db.comment_queries import CommentQueries
 from app.db.models import User
 from app.db.user_queries import UserQueries
-from app.db.comment_queries import CommentQueries
 from app.schemas.request_schemas import (
     CommentType,
     CreateArticleType,
@@ -165,7 +165,23 @@ class ArticleController(Controller):
             article = await ArticleQueries.get_article_by_slug(slug, session)
             if article is None:
                 raise NotFoundException(f"No article with {slug=} found")
-            new_comment = CommentQueries.create_comment(data, article.id, session)
+            new_comment = await CommentQueries.create_comment(
+                data, article.id, UUID(request.auth.sub), session
+            )
+            author_profile = await UserQueries.get_by_id(new_comment.author_id, session)
+            profile = ProfileResponse(
+                username=author_profile.username,
+                bio=author_profile.bio,
+                image=author_profile.image,
+                following=False,  # TODO: true if commenter follows themselves
+            )
+            return CommentResponse(
+                id=new_comment.id,
+                created_at=new_comment.created_at,
+                updated_at=new_comment.updated_at,
+                body=new_comment.body,
+                author=profile,
+            )
 
     @get(path="/{slug:str}/comments", exclude_from_auth=True)
     async def get_comments(self) -> CommentListResponse:

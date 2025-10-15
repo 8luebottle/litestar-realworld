@@ -1,5 +1,5 @@
-from uuid import UUID
 from datetime import datetime
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,7 +10,11 @@ from app.schemas.request_schemas import CommentType
 class CommentQueries:
     @classmethod
     async def create_comment(
-        cls, comment: CommentType, article_id: UUID, user_id: UUID, session: AsyncSession
+        cls,
+        comment: CommentType,
+        article_id: UUID,
+        user_id: UUID,
+        session: AsyncSession,
     ) -> Comment:
         new_comment = Comment(
             created_at=datetime.now(),
@@ -24,9 +28,10 @@ class CommentQueries:
 
         return new_comment
 
-
     @classmethod
-    async def get_comments(cls, article_id: UUID, session: AsyncSession) -> list[Comment]:
+    async def get_comments(
+        cls, article_id: UUID, session: AsyncSession
+    ) -> list[Comment]:
         pass
 
     @classmethod

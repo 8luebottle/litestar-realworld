@@ -48,7 +48,9 @@ class Article(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime)
     author: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
 
-    comments: Mapped[set["Comment"]] = relationship(lazy="selectin", cascade="all, delete-orphan")
+    comments: Mapped[set["Comment"]] = relationship(
+        lazy="selectin", cascade="all, delete-orphan"
+    )
     article_tags: Mapped[set["ArticleTag"]] = relationship(
         lazy="selectin", cascade="all, delete-orphan"
     )
@@ -61,8 +63,12 @@ class Comment(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime)
     updated_at: Mapped[datetime] = mapped_column(DateTime)
     body: Mapped[str] = mapped_column(String(500))
-    article_id: Mapped[UUID] = mapped_column(ForeignKey("articles.id"), ondelete="CASCADE")
-    author_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), ondelete="CASCADE")
+    article_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE")
+    )
+    author_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
+    )
 
 
 class Tag(Base):
