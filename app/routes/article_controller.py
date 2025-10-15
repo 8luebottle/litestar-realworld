@@ -218,8 +218,22 @@ class ArticleController(Controller):
             return CommentListResponse(comments=comments_to_return)
 
     @delete(path="/{slug:str}/comments/{id:int}")
-    async def delete_comment(self) -> None:
-        pass
+    async def delete_comment(
+        self, slug: str, id: int, request: Request[User, Token, Any], state: State
+    ) -> None:
+        async with sessionmaker(bind=state.engine) as session:
+            article = await ArticleQueries.get_article_by_slug(slug, session)
+            if article is None:
+                raise NotFoundException(f"No article with {slug=} found")
+
+            comment = await CommentQueries.get_comment_by_id(id, session)
+            if comment is None:
+                raise NotFoundException(f"No comment with {id=} found")
+
+            if str(comment.author_id) != request.auth.sub:
+                raise NotAuthorizedException("Only commenter can delete their comment")
+
+            await CommentQueries.delete_comment(id, session)
 
     @post(path="/{slug:str}/favorite")
     async def favorite_article(self) -> ArticleResponse:

@@ -39,5 +39,13 @@ class CommentQueries:
         return comments.scalars().all()
 
     @classmethod
+    async def get_comment_by_id(cls, comment_id: int, session: AsyncSession) -> Comment:
+        comment = await session.execute(select(Comment).where(Comment.id == comment_id))
+        return comment.scalar_one_or_none()
+
+    @classmethod
     async def delete_comment(cls, comment_id: int, session: AsyncSession) -> None:
-        pass
+        comment_to_delete = await cls.get_comment_by_id(comment_id, session)
+        await session.delete(comment_to_delete)
+        await session.commit()
+        return
