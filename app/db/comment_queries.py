@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import Comment
@@ -32,7 +33,10 @@ class CommentQueries:
     async def get_comments(
         cls, article_id: UUID, session: AsyncSession
     ) -> list[Comment]:
-        pass
+        comments = await session.execute(
+            select(Comment).where(Comment.article_id == article_id)
+        )
+        return comments.scalars().all()
 
     @classmethod
     async def delete_comment(cls, comment_id: int, session: AsyncSession) -> None:

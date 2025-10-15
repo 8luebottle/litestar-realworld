@@ -184,8 +184,38 @@ class ArticleController(Controller):
             )
 
     @get(path="/{slug:str}/comments", exclude_from_auth=True)
-    async def get_comments(self) -> CommentListResponse:
-        pass
+    async def get_comments(
+        self, slug: str, request: Request[User, Token, Any], state: State
+    ) -> CommentListResponse:
+        async with sessionmaker(bind=state.engine) as session:
+            article = await ArticleQueries.get_article_by_slug(slug, session)
+            if article is None:
+                raise NotFoundException(f"No article with {slug=} found")
+            comments = await CommentQueries.get_comments(article.id, session)
+
+            if comments == []:
+                return CommentListResponse(comments=[])
+            user_ids = set([comment.author_id for comment in comments])
+            profiles = {}
+            for id in user_ids:
+                author_profile = await UserQueries.get_by_id(id, session)
+                profiles[id] = ProfileResponse(
+                    username=author_profile.username,
+                    bio=author_profile.bio,
+                    image=author_profile.image,
+                    following=False,  # TODO: true if getter follows author
+                )
+            comments_to_return = [
+                CommentResponse(
+                    id=comment.id,
+                    created_at=comment.created_at,
+                    updated_at=comment.updated_at,
+                    body=comment.body,
+                    author=profiles[comment.author_id],
+                )
+                for comment in comments
+            ]
+            return CommentListResponse(comments=comments_to_return)
 
     @delete(path="/{slug:str}/comments/{id:int}")
     async def delete_comment(self) -> None:
