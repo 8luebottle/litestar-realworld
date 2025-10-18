@@ -3,12 +3,15 @@ from uuid import UUID
 
 from litestar import Controller, Request, delete, get, post, put
 from litestar.datastructures import State
-from litestar.exceptions import NotAuthorizedException, NotFoundException
+from litestar.exceptions import HTTPException, NotAuthorizedException, NotFoundException
 from litestar.security.jwt import Token
+from litestar.status_codes import HTTP_409_CONFLICT
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.db.article_queries import ArticleQueries
 from app.db.comment_queries import CommentQueries
+from app.db.favorite_queries import FavoriteQueries
 from app.db.models import User
 from app.db.user_queries import UserQueries
 from app.schemas.request_schemas import (
@@ -55,6 +58,9 @@ class ArticleController(Controller):
                 image=author.image,
                 following=False,  # TODO: true if author follows themselves, otherwise false.
             )
+            favorites_count = await FavoriteQueries.get_favorites_count(
+                article.id, session
+            )
 
             return ArticleResponse(
                 slug=article.slug,
@@ -65,7 +71,7 @@ class ArticleController(Controller):
                 created_at=article.created_at,
                 updated_at=article.updated_at,
                 favorited=False,
-                favorites_count=0,
+                favorites_count=favorites_count,
                 author=profile,
             )
 
@@ -125,6 +131,9 @@ class ArticleController(Controller):
                 image=author.image,
                 following=True,  # TODO: true if author follows themselves, otherwise false.
             )
+            favorites_count = await FavoriteQueries.get_favorites_count(
+                article.id, session
+            )
 
             return ArticleResponse(
                 slug=updated_article.slug,
@@ -135,7 +144,7 @@ class ArticleController(Controller):
                 created_at=updated_article.created_at,
                 updated_at=updated_article.updated_at,
                 favorited=False,  # TODO: true if author follows themselves, otherwise false.
-                favorites_count=0,  # TODO: true if author favorited this article.
+                favorites_count=favorites_count,
                 author=profile,
             )
 
@@ -236,9 +245,58 @@ class ArticleController(Controller):
             await CommentQueries.delete_comment(id, session)
 
     @post(path="/{slug:str}/favorite")
-    async def favorite_article(self) -> ArticleResponse:
-        pass
+    async def favorite_article(
+        self, slug: str, request: Request[User, Token, Any], state: State
+    ) -> ArticleResponse:
+        async with sessionmaker(bind=state.engine) as session:
+            article = await ArticleQueries.get_article_by_slug(slug, session)
+            if article is None:
+                raise NotFoundException(f"No article with {slug=} found")
+
+            try:
+                _ = await FavoriteQueries.create_favorite(
+                    article.id, UUID(request.auth.sub), session
+                )
+            except IntegrityError:
+                raise HTTPException(
+                    status_code=HTTP_409_CONFLICT,
+                    detail="Could not favorite article due to pre-existing favorite or other",
+                )
+
+            tags = [tag.tag for tag in article.article_tags]
+            author = await UserQueries.get_by_id(article.author, session)
+            profile = ProfileResponse(
+                username=author.username,
+                bio=author.bio,
+                image=author.image,
+                following=False,  # TODO: true if author follows themselves, otherwise false.
+            )
+            favorites_count = await FavoriteQueries.get_favorites_count(
+                article.id, session
+            )
+
+            return ArticleResponse(
+                slug=article.slug,
+                title=article.title,
+                description=article.description,
+                body=article.body,
+                tag_list=tags,
+                created_at=article.created_at,
+                updated_at=article.updated_at,
+                favorited=True,
+                favorites_count=favorites_count,
+                author=profile,
+            )
 
     @delete(path="/{slug:str}/favorite")
-    async def unfavorite_article(self) -> None:
-        pass
+    async def unfavorite_article(
+        self, slug: str, request: Request[User, Token, Any], state: State
+    ) -> None:
+        async with sessionmaker(bind=state.engine) as session:
+            article = await ArticleQueries.get_article_by_slug(slug, session)
+            if article is None:
+                raise NotFoundException(f"No article with {slug=} found")
+
+            _ = await FavoriteQueries.delete_favorite(
+                article.id, UUID(request.auth.sub), session
+            )

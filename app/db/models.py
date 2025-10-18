@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import UUID, DateTime, ForeignKey, Integer, String
+from sqlalchemy import UUID, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -22,6 +22,9 @@ class User(Base):
     image: Mapped[str | None] = mapped_column(String(100))
 
     comments: Mapped[set["Comment"]] = relationship(cascade="all, delete-orphan")
+    favorites: Mapped[set["UserFavorite"]] = relationship(
+        lazy="selectin", cascade="all, delete-orphan"
+    )
     followers: Mapped[list["UserFollow"]] = relationship(
         "UserFollow",
         foreign_keys="UserFollow.followed_user_id",
@@ -52,6 +55,9 @@ class Article(Base):
         lazy="selectin", cascade="all, delete-orphan"
     )
     article_tags: Mapped[set["ArticleTag"]] = relationship(
+        lazy="selectin", cascade="all, delete-orphan"
+    )
+    favorites: Mapped[set["UserFavorite"]] = relationship(
         lazy="selectin", cascade="all, delete-orphan"
     )
 
@@ -92,11 +98,18 @@ class ArticleTag(Base):
 class UserFavorite(Base):
     __tablename__ = "user_favorites"
 
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid4
+    )
     user_id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
     )
     article_id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("articles.id"), primary_key=True
+        UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE")
+    )
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "article_id", name="_user_article_uc"),
     )
 
 
