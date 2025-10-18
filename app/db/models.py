@@ -1,7 +1,8 @@
 from datetime import datetime
-from uuid import uuid4
+from uuid import UUID, uuid4
 
-from sqlalchemy import UUID, DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -13,7 +14,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid4
+        pgUUID(as_uuid=True), primary_key=True, default=uuid4
     )
     username: Mapped[str] = mapped_column(String(30))
     email: Mapped[str] = mapped_column(String(100))  # TODO: needs to be unique
@@ -41,7 +42,7 @@ class Article(Base):
     __tablename__ = "articles"
 
     id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid4
+        pgUUID(as_uuid=True), primary_key=True, default=uuid4
     )
     slug: Mapped[str] = mapped_column(String(150), unique=True)
     title: Mapped[str] = mapped_column(String(150))
@@ -49,7 +50,7 @@ class Article(Base):
     body: Mapped[str] = mapped_column(String(10_000))
     created_at: Mapped[datetime] = mapped_column(DateTime)
     updated_at: Mapped[datetime] = mapped_column(DateTime)
-    author: Mapped[UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    author: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), ForeignKey("users.id"))
 
     comments: Mapped[set["Comment"]] = relationship(
         lazy="selectin", cascade="all, delete-orphan"
@@ -70,10 +71,10 @@ class Comment(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime)
     body: Mapped[str] = mapped_column(String(500))
     article_id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE")
+        pgUUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE")
     )
     author_id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
+        pgUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
     )
 
 
@@ -90,7 +91,7 @@ class ArticleTag(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     article_id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE")
+        pgUUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE")
     )
     tag: Mapped[str] = mapped_column(String(30), ForeignKey("tags.tag"))
 
@@ -99,13 +100,13 @@ class UserFavorite(Base):
     __tablename__ = "user_favorites"
 
     id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid4
+        pgUUID(as_uuid=True), primary_key=True, default=uuid4
     )
     user_id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
+        pgUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
     )
     article_id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE")
+        pgUUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE")
     )
 
     __table_args__ = (
@@ -117,10 +118,10 @@ class UserFollow(Base):
     __tablename__ = "user_follows"
 
     followed_user_id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True
+        pgUUID(as_uuid=True), ForeignKey("users.id"), primary_key=True
     )
     follower_user_id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True
+        pgUUID(as_uuid=True), ForeignKey("users.id"), primary_key=True
     )
 
     followed_user: Mapped["User"] = relationship(
