@@ -28,6 +28,12 @@ class TagQueries:
         return None
 
     @classmethod
+    async def get_tags(cls, session: AsyncSession) -> list[Tag]:
+        result = await session.execute(select(Tag))
+        all_tags: list[Tag] = result.scalars().all()
+        return all_tags
+
+    @classmethod
     async def get_or_create_tag(cls, tag: str, session: AsyncSession) -> Tag:
         result = await cls.get_tag(tag, session)
         if result:
