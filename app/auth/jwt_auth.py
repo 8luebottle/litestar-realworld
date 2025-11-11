@@ -1,3 +1,6 @@
+from typing import Any
+
+from litestar import Request
 from litestar.connection import ASGIConnection
 from litestar.exceptions import NotFoundException, PermissionDeniedException
 from litestar.security.jwt import JWTAuth, Token
@@ -13,7 +16,7 @@ ALGORITHM = "HS256"
 
 async def retrieve_user_handler(
     token: Token, connection: ASGIConnection
-) -> AuthenticatedUserResponse:
+) -> AuthenticatedUserResponse | None:
     state = connection.app.state
     sessionmaker = async_sessionmaker(expire_on_commit=False)
     async with sessionmaker(bind=state.engine) as session:
@@ -21,7 +24,12 @@ async def retrieve_user_handler(
             user = await UserQueries.get_by_id(token.sub, session)
             return user
         except NotFoundException:
-            raise PermissionDeniedException()
+            return None
+
+
+def require_authentication(request: Request[Token, User, Any]) -> None:
+    if not request.user:
+        raise PermissionDeniedException
 
 
 jwt_auth = JWTAuth[User, Token](

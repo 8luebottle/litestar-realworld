@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import User
+from app.db.models import User, UserFollow
 from app.schemas.request_schemas import LoginUserType, UpdateUserType
 from app.schemas.response_schemas import AuthenticatedUserResponse
 
@@ -64,6 +64,12 @@ class UserQueries:
             raise NotFoundException(detail=f"User with {id=} not found.") from e
 
     @classmethod
+    async def get_by_username(cls, username: str, session: AsyncSession) -> User | None:
+        query = select(User).where(User.username == username)
+        result = await session.execute(query)
+        return result.scalar_one_or_none()
+
+    @classmethod
     async def update(
         cls, id: str, user: UpdateUserType, session: AsyncSession
     ) -> AuthenticatedUserResponse:
@@ -90,3 +96,20 @@ class UserQueries:
             image=updated_user.image,
             token="dummy_token",
         )
+
+    @classmethod
+    async def is_following(
+        cls, follower_id: UUID, followed_id: UUID, session: AsyncSession
+    ) -> bool:
+        follower = await cls.get_by_id(follower_id, session)
+        followed = await cls.get_by_id(followed_id, session)
+
+        if not follower or not followed:
+            return False
+
+        query = select(UserFollow).where(
+            followed_user_id=followed_id, follower_user_id=follower_id
+        )
+        result = await session.execute(query)
+        is_following = True if result.scalar_one_or_none() else False
+        return is_following

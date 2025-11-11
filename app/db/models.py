@@ -37,6 +37,8 @@ class User(Base):
         back_populates="follower_user",
     )
 
+    __table_args__ = (UniqueConstraint("username", name="_username_uc"),)
+
 
 class Article(Base):
     __tablename__ = "articles"
@@ -117,11 +119,12 @@ class UserFavorite(Base):
 class UserFollow(Base):
     __tablename__ = "user_follows"
 
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     followed_user_id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), ForeignKey("users.id"), primary_key=True
+        pgUUID(as_uuid=True), ForeignKey("users.id")
     )
     follower_user_id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), ForeignKey("users.id"), primary_key=True
+        pgUUID(as_uuid=True), ForeignKey("users.id")
     )
 
     followed_user: Mapped["User"] = relationship(
@@ -129,4 +132,10 @@ class UserFollow(Base):
     )
     follower_user: Mapped["User"] = relationship(
         "User", foreign_keys=[follower_user_id], back_populates="following"
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "follower_user_id", "followed_user_id", name="_user_follow_uc"
+        ),
     )
