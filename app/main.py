@@ -5,7 +5,7 @@ from litestar import Litestar
 from litestar.openapi.config import OpenAPIConfig
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from .auth.jwt_auth import jwt_auth, require_authentication
+from .auth.jwt_auth import jwt_auth
 from .db.models import Base
 from .routes.article_controller import ArticleController
 from .routes.profile_controller import ProfileController
@@ -40,7 +40,6 @@ app = Litestar(
     [ArticleController, ProfileController, TagController, UserController],
     lifespan=[db_connection],
     on_app_init=[jwt_auth.on_app_init],
-    guards=[require_authentication],
     openapi_config=openapi_config,
     debug=True,
 )

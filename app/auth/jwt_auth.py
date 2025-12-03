@@ -1,8 +1,6 @@
-from typing import Any
-
 from litestar import Request
 from litestar.connection import ASGIConnection
-from litestar.exceptions import NotFoundException, PermissionDeniedException
+from litestar.exceptions import NotFoundException
 from litestar.security.jwt import JWTAuth, Token
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -27,9 +25,20 @@ async def retrieve_user_handler(
             return None
 
 
-def require_authentication(request: Request[Token, User, Any]) -> None:
-    if not request.user:
-        raise PermissionDeniedException
+async def authenticate_manually(request: Request) -> User | None:
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return None
+
+    try:
+        token_str = auth_header[7:]
+        token = Token.decode(token_str, SECRET, algorithm=ALGORITHM)
+        state = request.app.state
+        sessionmaker = async_sessionmaker(expire_on_commit=False)
+        async with sessionmaker(bind=state.engine) as session:
+            return await UserQueries.get_user_by_id(token.sub, session)
+    except (KeyError, ValueError, NotFoundException):
+        return None
 
 
 jwt_auth = JWTAuth[User, Token](

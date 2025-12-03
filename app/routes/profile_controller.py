@@ -1,5 +1,4 @@
 from typing import Any
-from uuid import UUID
 
 from litestar import Controller, Request, delete, get, post
 from litestar.datastructures import State
@@ -7,6 +6,7 @@ from litestar.exceptions import NotFoundException
 from litestar.security.jwt import Token
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
+from app.auth.jwt_auth import authenticate_manually
 from app.db.models import User
 from app.db.user_queries import UserQueries
 from app.schemas.response_schemas import ProfileResponse
@@ -17,7 +17,7 @@ sessionmaker = async_sessionmaker(expire_on_commit=False)
 class ProfileController(Controller):
     path = "api/profiles"
 
-    @get(path="/{username:str}", guards=[])
+    @get(path="/{username:str}", exclude_from_auth=True)
     async def get_profile(
         self, username: str, request: Request[User, Token, Any], state: State
     ) -> ProfileResponse:
@@ -26,10 +26,10 @@ class ProfileController(Controller):
             if not user:
                 raise NotFoundException(detail=f"No profile with {username=} found")
 
-            if request.user:
-                requester_id = UUID(request.user.id)
+            requesting_user = await authenticate_manually(request)
+            if requesting_user:
                 is_following = await UserQueries.is_following(
-                    requester_id, user.id, session
+                    requesting_user.id, user.id, session
                 )
             else:
                 is_following = False

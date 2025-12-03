@@ -108,7 +108,8 @@ class UserQueries:
             return False
 
         query = select(UserFollow).where(
-            followed_user_id=followed_id, follower_user_id=follower_id
+            UserFollow.followed_user_id == followed_id,
+            UserFollow.follower_user_id == follower_id,
         )
         result = await session.execute(query)
         is_following = True if result.scalar_one_or_none() else False
