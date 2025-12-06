@@ -42,8 +42,20 @@ class ProfileController(Controller):
             )
 
     @post(path="/{username:str}/follow")
-    async def follow_user(self) -> ProfileResponse:
-        pass
+    async def follow_user(
+        self, username: str, request: Request[User, Token, Any], state: State
+    ) -> ProfileResponse:
+        async with sessionmaker(bind=state.engine) as session:
+            follower_id = request.auth.sub
+            followed_id = await UserQueries.get_by_username(username, session)
+            if not followed_id:
+                raise NotFoundException(f"No user with {username=} found")
+
+            await UserQueries.follow_user(follower_id, followed_id.id, session)
+            username = followed_id.username
+            bio = followed_id.bio
+            image = followed_id.image
+        return ProfileResponse(username=username, bio=bio, image=image, following=True)
 
     @delete(path="/{username:str}/follow")
     async def unfollow_user(self) -> None:

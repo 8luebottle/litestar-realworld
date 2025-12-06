@@ -114,3 +114,22 @@ class UserQueries:
         result = await session.execute(query)
         is_following = True if result.scalar_one_or_none() else False
         return is_following
+
+    @classmethod
+    async def follow_user(
+        cls, follower_id: UUID, followed_id: UUID, session: AsyncSession
+    ) -> None:
+        existing = await session.execute(
+            select(UserFollow).where(
+                UserFollow.follower_user_id == follower_id,
+                UserFollow.followed_user_id == followed_id,
+            )
+        )
+        if existing.scalar_one_or_none():
+            return
+
+        new_follow = UserFollow(
+            follower_user_id=follower_id, followed_user_id=followed_id
+        )
+        session.add(new_follow)
+        await session.commit()

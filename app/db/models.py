@@ -27,14 +27,16 @@ class User(Base):
         lazy="selectin", cascade="all, delete-orphan"
     )
     followers: Mapped[list["UserFollow"]] = relationship(
-        "UserFollow",
-        foreign_keys="UserFollow.followed_user_id",
+        foreign_keys="[UserFollow.followed_user_id]",
         back_populates="followed_user",
+        lazy="selectin",
+        cascade="all, delete-orphan",
     )
     following: Mapped[list["UserFollow"]] = relationship(
-        "UserFollow",
-        foreign_keys="UserFollow.follower_user_id",
+        foreign_keys="[UserFollow.follower_user_id]",
         back_populates="follower_user",
+        lazy="selectin",
+        cascade="all, delete-orphan",
     )
 
     __table_args__ = (UniqueConstraint("username", name="_username_uc"),)
@@ -121,21 +123,21 @@ class UserFollow(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     followed_user_id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), ForeignKey("users.id")
+        pgUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
     )
     follower_user_id: Mapped[UUID] = mapped_column(
-        pgUUID(as_uuid=True), ForeignKey("users.id")
+        pgUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
     )
 
     followed_user: Mapped["User"] = relationship(
-        "User", foreign_keys=[followed_user_id], back_populates="followers"
+        foreign_keys=[followed_user_id], back_populates="followers"
     )
     follower_user: Mapped["User"] = relationship(
-        "User", foreign_keys=[follower_user_id], back_populates="following"
+        foreign_keys=[follower_user_id], back_populates="following"
     )
 
     __table_args__ = (
         UniqueConstraint(
-            "follower_user_id", "followed_user_id", name="_user_follow_uc"
+            "followed_user_id", "follower_user_id", name="_user_follow_uc"
         ),
     )
