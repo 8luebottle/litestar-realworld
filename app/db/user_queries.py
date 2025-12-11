@@ -133,3 +133,20 @@ class UserQueries:
         )
         session.add(new_follow)
         await session.commit()
+
+    @classmethod
+    async def delete_user(
+        cls, follower_id: UUID, followed_id: UUID, session: AsyncSession
+    ) -> None:
+        existing = await session.execute(
+            select(UserFollow).where(
+                UserFollow.follower_user_id == follower_id,
+                UserFollow.followed_user_id == followed_id,
+            )
+        )
+        result = existing.scalar_one_or_none()
+        if not result:
+            return
+
+        await session.delete(result)
+        await session.commit()
