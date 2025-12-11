@@ -3,7 +3,10 @@ from typing import Any
 
 from litestar import Controller, Request, get, post, put
 from litestar.datastructures import State
+from litestar.exceptions import HTTPException
 from litestar.security.jwt import Token
+from litestar.status_codes import HTTP_409_CONFLICT
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.auth.jwt_auth import ALGORITHM, SECRET, jwt_auth
@@ -28,9 +31,14 @@ class UserController(Controller):
             username=data.username, email=data.email, password=data.password, bio=""
         )
         async with sessionmaker(bind=state.engine) as session:
-            async with session.begin():
-                session.add(new_user)
-                await session.flush()
+            try:
+                async with session.begin():
+                    session.add(new_user)
+                    await session.flush()
+            except IntegrityError:
+                raise HTTPException(
+                    "Username or email already in user", status_code=HTTP_409_CONFLICT
+                )
 
         new_jwt = jwt_auth.create_token(
             identifier=str(new_user.id), token_expiration=timedelta(minutes=15)

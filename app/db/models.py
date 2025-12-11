@@ -39,7 +39,10 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
-    __table_args__ = (UniqueConstraint("username", name="_username_uc"),)
+    __table_args__ = (
+        UniqueConstraint("username", name="_username_uc"),
+        UniqueConstraint("email", name="_email_uc"),
+    )
 
 
 class Article(Base):
