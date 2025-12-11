@@ -9,6 +9,7 @@ from litestar.status_codes import HTTP_409_CONFLICT
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
+from app.auth.jwt_auth import authenticate_manually
 from app.db.article_queries import ArticleQueries
 from app.db.comment_queries import CommentQueries
 from app.db.favorite_queries import FavoriteQueries
@@ -44,19 +45,29 @@ class ArticleController(Controller):
         pass
 
     @get(path="/{slug:str}", exclude_from_auth=True)
-    async def get_article(self, slug: str, state: State) -> ArticleResponse:
-        # TODO: determine if authentication is present or not
+    async def get_article(
+        self, slug: str, request: Request[User, Token, Any], state: State
+    ) -> ArticleResponse:
         async with sessionmaker(bind=state.engine) as session:
             article = await ArticleQueries.get_article_by_slug(slug, session)
             if article is None:
                 raise NotFoundException(f"No article with {slug=} found")
             tags = [tag.tag for tag in article.article_tags]
-            author = await UserQueries.get_by_id(article.author, session)
+            author = await UserQueries.get_user_by_id(article.author, session)
+
+            requesting_user = await authenticate_manually(request)
+            if requesting_user:
+                is_following = await UserQueries.is_following(
+                    requesting_user.id, author.id, session
+                )
+            else:
+                is_following = False
+
             profile = ProfileResponse(
                 username=author.username,
                 bio=author.bio,
                 image=author.image,
-                following=False,  # TODO: true if author follows themselves, otherwise false.
+                following=is_following,
             )
             favorites_count = await FavoriteQueries.get_favorites_count(
                 article.id, session
