@@ -1,10 +1,12 @@
 from datetime import datetime
 
+from litestar.exceptions import NotFoundException
+from litestar.status_codes import HTTP_404_NOT_FOUND
 from slugify import slugify
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import Article
+from app.db.models import Article, ArticleTag, UserFavorite
 from app.schemas.request_schemas import (
     CreateArticleType,
     GetArticlesType,
@@ -12,6 +14,7 @@ from app.schemas.request_schemas import (
 )
 
 from .tag_queries import TagQueries
+from .user_queries import UserQueries
 
 
 class ArticleQueries:
@@ -52,9 +55,32 @@ class ArticleQueries:
 
     @classmethod
     async def get_articles(
-        cls, query: GetArticlesType, id: str | None, session: AsyncSession
+        cls, query: GetArticlesType, session: AsyncSession
     ) -> list[Article]:
-        pass
+        stmt = select(Article).order_by(Article.created_at)
+
+        if query.tag:
+            stmt = stmt.join(Article.article_tags)
+            stmt = stmt.where(ArticleTag.tag == query.tag)
+        if query.author:
+            author_id = await UserQueries.get_by_username(query.author, session)
+            if not author_id:
+                raise NotFoundException(
+                    "Author id not found", status_code=HTTP_404_NOT_FOUND
+                )
+            stmt = stmt.where(Article.author == author_id)
+        if query.favorited:
+            favorited_id = await UserQueries.get_by_username(query.favorited, session)
+            if not favorited_id:
+                raise NotFoundException(
+                    "Favorited id not found", status_code=HTTP_404_NOT_FOUND
+                )
+            stmt = stmt.join(Article.favorites)
+            stmt = stmt.where(UserFavorite.user_id == favorited_id)
+
+        stmt = stmt.offset(query.offset).limit(query.limit)
+        result = await session.execute(stmt)
+        return result.scalars().all()
 
     @classmethod
     async def update_article(

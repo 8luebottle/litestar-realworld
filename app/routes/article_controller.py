@@ -7,13 +7,13 @@ from litestar.exceptions import HTTPException, NotAuthorizedException, NotFoundE
 from litestar.security.jwt import Token
 from litestar.status_codes import HTTP_409_CONFLICT
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.auth.jwt_auth import authenticate_manually
 from app.db.article_queries import ArticleQueries
 from app.db.comment_queries import CommentQueries
 from app.db.favorite_queries import FavoriteQueries
-from app.db.models import User
+from app.db.models import Article, User
 from app.db.user_queries import UserQueries
 from app.schemas.request_schemas import (
     CommentType,
@@ -36,9 +36,55 @@ sessionmaker = async_sessionmaker(expire_on_commit=False)
 class ArticleController(Controller):
     path = "api/articles"
 
+    async def _make_article_response(
+        self,
+        article: Article,
+        request: Request[User, Token, Any],
+        session: AsyncSession,
+    ) -> ArticleResponse:
+        tags = [tag.tag for tag in article.article_tags]
+        author = await UserQueries.get_user_by_id(article.author, session)
+
+        requesting_user = await authenticate_manually(request)
+        if requesting_user:
+            is_following = await UserQueries.is_following(
+                requesting_user.id, author.id, session
+            )
+        else:
+            is_following = False
+
+        profile = ProfileResponse(
+            username=author.username,
+            bio=author.bio,
+            image=author.image,
+            following=is_following,
+        )
+        favorites_count = await FavoriteQueries.get_favorites_count(article.id, session)
+
+        return ArticleResponse(
+            slug=article.slug,
+            title=article.title,
+            description=article.description,
+            body=article.body,
+            tag_list=tags,
+            created_at=article.created_at,
+            updated_at=article.updated_at,
+            favorited=False,
+            favorites_count=favorites_count,
+            author=profile,
+        )
+
     @get()
-    async def get_articles(self, query: GetArticlesType) -> ArticleListResponse:
-        pass
+    async def get_articles(
+        self, query: GetArticlesType, request: Request[User, Token, Any], state: State
+    ) -> ArticleListResponse:
+        async with sessionmaker(bind=state.engine) as session:
+            articles = ArticleQueries.get_articles(query, session)
+            article_response = [
+                self._make_article_response(article, request, session)
+                for article in articles
+            ]
+            return ArticleListResponse(article_response, len(article_response))
 
     @get(path="/feed")
     async def get_article_feed(self, query: GetFeedType) -> ArticleListResponse:
@@ -52,39 +98,7 @@ class ArticleController(Controller):
             article = await ArticleQueries.get_article_by_slug(slug, session)
             if article is None:
                 raise NotFoundException(f"No article with {slug=} found")
-            tags = [tag.tag for tag in article.article_tags]
-            author = await UserQueries.get_user_by_id(article.author, session)
-
-            requesting_user = await authenticate_manually(request)
-            if requesting_user:
-                is_following = await UserQueries.is_following(
-                    requesting_user.id, author.id, session
-                )
-            else:
-                is_following = False
-
-            profile = ProfileResponse(
-                username=author.username,
-                bio=author.bio,
-                image=author.image,
-                following=is_following,
-            )
-            favorites_count = await FavoriteQueries.get_favorites_count(
-                article.id, session
-            )
-
-            return ArticleResponse(
-                slug=article.slug,
-                title=article.title,
-                description=article.description,
-                body=article.body,
-                tag_list=tags,
-                created_at=article.created_at,
-                updated_at=article.updated_at,
-                favorited=False,
-                favorites_count=favorites_count,
-                author=profile,
-            )
+            return self._make_article_response(article, request, session)
 
     @post()
     async def create_article(
