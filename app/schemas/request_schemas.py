@@ -33,17 +33,29 @@ class CreateUserType(Struct):
     password: str
 
 
+class CreateUserWrapper(Struct):
+    user: CreateUserType
+
+
 class LoginUserType(Struct):
     email: str
     password: str
 
 
+class LoginWrapper(Struct):
+    user: LoginUserType
+
+
 class UpdateUserType(Struct):
-    email: str | None
-    username: str | None
-    password: str | None
-    image: str | None
-    bio: str | None
+    email: str | None = None
+    username: str | None = None
+    password: str | None = None
+    image: str | None = None
+    bio: str | None = None
+
+
+class UpdateUserWrapper(Struct):
+    user: UpdateUserType
 
 
 class CommentBodyType(Struct):

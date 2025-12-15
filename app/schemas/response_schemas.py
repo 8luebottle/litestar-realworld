@@ -14,6 +14,10 @@ class AuthenticatedUserResponse(UserResponse):
     token: str
 
 
+class UserWrapper(Struct):
+    user: AuthenticatedUserResponse
+
+
 class ProfileResponse(Struct):
     username: str
     bio: str
