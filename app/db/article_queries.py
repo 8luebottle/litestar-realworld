@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from litestar.exceptions import NotFoundException
 from litestar.status_codes import HTTP_404_NOT_FOUND
@@ -6,10 +7,11 @@ from slugify import slugify
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import Article, ArticleTag, UserFavorite
+from app.db.models import Article, ArticleTag, UserFavorite, UserFollow
 from app.schemas.request_schemas import (
     CreateArticleType,
     GetArticlesType,
+    GetFeedType,
     UpdateArticleType,
 )
 
@@ -77,6 +79,21 @@ class ArticleQueries:
                 )
             stmt = stmt.join(Article.favorites)
             stmt = stmt.where(UserFavorite.user_id == favorited.id)
+
+        stmt = stmt.offset(query.offset).limit(query.limit)
+        result = await session.execute(stmt)
+        return result.scalars().all()
+
+    @classmethod
+    async def get_article_feed(
+        cls, query: GetFeedType, user_id: UUID, session: AsyncSession
+    ) -> list[Article]:
+        stmt = (
+            select(Article)
+            .order_by(Article.created_at)
+            .join(Article.author)
+            .where(UserFollow.follower_user_id == user_id)
+        )
 
         stmt = stmt.offset(query.offset).limit(query.limit)
         result = await session.execute(stmt)
