@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -55,8 +55,12 @@ class Article(Base):
     title: Mapped[str] = mapped_column(String(150))
     description: Mapped[str] = mapped_column(String(250))
     body: Mapped[str] = mapped_column(String(10_000))
-    created_at: Mapped[datetime] = mapped_column(DateTime)
-    updated_at: Mapped[datetime] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
     author: Mapped[UUID] = mapped_column(pgUUID(as_uuid=True), ForeignKey("users.id"))
 
     comments: Mapped[set["Comment"]] = relationship(
@@ -74,8 +78,12 @@ class Comment(Base):
     __tablename__ = "comments"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime)
-    updated_at: Mapped[datetime] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
     body: Mapped[str] = mapped_column(String(500))
     article_id: Mapped[UUID] = mapped_column(
         pgUUID(as_uuid=True), ForeignKey("articles.id", ondelete="CASCADE")

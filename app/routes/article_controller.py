@@ -25,6 +25,7 @@ from app.schemas.request_schemas import (
 from app.schemas.response_schemas import (
     ArticleListResponse,
     ArticleResponse,
+    ArticleResponseWrapper,
     CommentListResponse,
     CommentResponse,
     ProfileResponse,
@@ -81,7 +82,7 @@ class ArticleController(Controller):
         async with sessionmaker(bind=state.engine) as session:
             articles = await ArticleQueries.get_articles(query, session)
             article_response = [
-                self._make_article_response(article, request, session)
+                await self._make_article_response(article, request, session)
                 for article in articles
             ]
             return ArticleListResponse(article_response, len(article_response))
@@ -98,7 +99,8 @@ class ArticleController(Controller):
             article = await ArticleQueries.get_article_by_slug(slug, session)
             if article is None:
                 raise NotFoundException(f"No article with {slug=} found")
-            return self._make_article_response(article, request, session)
+            response = await self._make_article_response(article, request, session)
+            return ArticleResponseWrapper(article=response)
 
     @post()
     async def create_article(
@@ -135,7 +137,7 @@ class ArticleController(Controller):
                 author=profile,
             )
 
-        return article_to_return
+        return ArticleResponseWrapper(article=article_to_return)
 
     @put(path="/{slug:str}")
     async def update_article(
@@ -169,7 +171,7 @@ class ArticleController(Controller):
                 article.id, session
             )
 
-            return ArticleResponse(
+            response = ArticleResponse(
                 slug=updated_article.slug,
                 title=updated_article.title,
                 description=updated_article.description,
@@ -181,6 +183,7 @@ class ArticleController(Controller):
                 favorites_count=favorites_count,
                 author=profile,
             )
+            return ArticleResponseWrapper(article=response)
 
     @delete(path="/{slug:str}")
     async def delete_article(
@@ -320,7 +323,7 @@ class ArticleController(Controller):
                 article.id, session
             )
 
-            return ArticleResponse(
+            response = ArticleResponse(
                 slug=article.slug,
                 title=article.title,
                 description=article.description,
@@ -332,6 +335,7 @@ class ArticleController(Controller):
                 favorites_count=favorites_count,
                 author=profile,
             )
+            return ArticleResponseWrapper(article=response)
 
     @delete(path="/{slug:str}/favorite")
     async def unfavorite_article(

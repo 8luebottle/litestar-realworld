@@ -25,7 +25,7 @@ class ProfileResponse(Struct):
     following: bool
 
 
-class ArticleResponse(Struct):
+class ArticleResponse(Struct, rename="camel"):
     slug: str
     title: str
     description: str
@@ -38,7 +38,11 @@ class ArticleResponse(Struct):
     author: ProfileResponse
 
 
-class ArticleListResponse(Struct):
+class ArticleResponseWrapper(Struct):
+    article: ArticleResponse
+
+
+class ArticleListResponse(Struct, rename="camel"):
     articles: list[ArticleResponse]
     articles_count: int
 
