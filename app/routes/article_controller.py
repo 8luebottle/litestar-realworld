@@ -79,7 +79,7 @@ class ArticleController(Controller):
         self, query: GetArticlesType, request: Request[User, Token, Any], state: State
     ) -> ArticleListResponse:
         async with sessionmaker(bind=state.engine) as session:
-            articles = ArticleQueries.get_articles(query, session)
+            articles = await ArticleQueries.get_articles(query, session)
             article_response = [
                 self._make_article_response(article, request, session)
                 for article in articles

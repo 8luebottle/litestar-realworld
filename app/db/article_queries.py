@@ -63,20 +63,20 @@ class ArticleQueries:
             stmt = stmt.join(Article.article_tags)
             stmt = stmt.where(ArticleTag.tag == query.tag)
         if query.author:
-            author_id = await UserQueries.get_by_username(query.author, session)
-            if not author_id:
+            author = await UserQueries.get_by_username(query.author, session)
+            if not author:
                 raise NotFoundException(
                     "Author id not found", status_code=HTTP_404_NOT_FOUND
                 )
-            stmt = stmt.where(Article.author == author_id)
+            stmt = stmt.where(Article.author == author.id)
         if query.favorited:
-            favorited_id = await UserQueries.get_by_username(query.favorited, session)
-            if not favorited_id:
+            favorited = await UserQueries.get_by_username(query.favorited, session)
+            if not favorited:
                 raise NotFoundException(
                     "Favorited id not found", status_code=HTTP_404_NOT_FOUND
                 )
             stmt = stmt.join(Article.favorites)
-            stmt = stmt.where(UserFavorite.user_id == favorited_id)
+            stmt = stmt.where(UserFavorite.user_id == favorited.id)
 
         stmt = stmt.offset(query.offset).limit(query.limit)
         result = await session.execute(stmt)

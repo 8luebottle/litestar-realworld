@@ -2,9 +2,9 @@ from msgspec import Struct
 
 
 class GetArticlesType(Struct):
-    tag: str | None
-    author: str | None
-    favorited: str | None
+    tag: str | None = None
+    author: str | None = None
+    favorited: str | None = None
     limit: int = 20
     offset: int = 0
 
@@ -18,13 +18,13 @@ class CreateArticleType(Struct):
     title: str
     description: str
     body: str
-    tag_list: list[str] | None
+    tag_list: list[str] | None = None
 
 
 class UpdateArticleType(Struct):
-    title: str | None
-    description: str | None
-    body: str | None
+    title: str | None = None
+    description: str | None = None
+    body: str | None = None
 
 
 class CreateUserType(Struct):
