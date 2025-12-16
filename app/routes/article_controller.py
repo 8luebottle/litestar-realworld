@@ -17,7 +17,7 @@ from app.db.models import Article, User
 from app.db.user_queries import UserQueries
 from app.schemas.request_schemas import (
     CommentType,
-    CreateArticleType,
+    CreateArticleWrapper,
     GetArticlesType,
     GetFeedType,
     UpdateArticleType,
@@ -102,8 +102,12 @@ class ArticleController(Controller):
 
     @post()
     async def create_article(
-        self, data: CreateArticleType, request: Request[User, Token, Any], state: State
+        self,
+        data: CreateArticleWrapper,
+        request: Request[User, Token, Any],
+        state: State,
     ) -> ArticleResponse:
+        data = data.article
         async with sessionmaker(bind=state.engine) as session:
             new_article = await ArticleQueries.create_article(
                 request.auth.sub, data, session

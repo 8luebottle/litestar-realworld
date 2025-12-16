@@ -21,6 +21,10 @@ class CreateArticleType(Struct):
     tag_list: list[str] | None = None
 
 
+class CreateArticleWrapper(Struct):
+    article: CreateArticleType
+
+
 class UpdateArticleType(Struct):
     title: str | None = None
     description: str | None = None
