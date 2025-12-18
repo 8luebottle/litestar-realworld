@@ -25,6 +25,10 @@ class ProfileResponse(Struct):
     following: bool
 
 
+class ProfileResponseWrapper(Struct):
+    profile: ProfileResponse
+
+
 class ArticleResponse(Struct, rename="camel"):
     slug: str
     title: str
