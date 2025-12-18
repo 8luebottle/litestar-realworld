@@ -5,7 +5,7 @@ from litestar import Controller, Request, delete, get, post, put
 from litestar.datastructures import State
 from litestar.exceptions import HTTPException, NotAuthorizedException, NotFoundException
 from litestar.security.jwt import Token
-from litestar.status_codes import HTTP_409_CONFLICT
+from litestar.status_codes import HTTP_200_OK, HTTP_409_CONFLICT
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -44,6 +44,7 @@ class ArticleController(Controller):
         session: AsyncSession,
     ) -> ArticleResponse:
         tags = [tag.tag for tag in article.article_tags]
+        tags.sort()
         author = await UserQueries.get_user_by_id(article.author, session)
 
         requesting_user = await authenticate_manually(request)
@@ -155,33 +156,8 @@ class ArticleController(Controller):
                 raise NotAuthorizedException("User not authorized to update article")
 
             updated_article = await ArticleQueries.update_article(slug, data, session)
-            tags = [tag.tag for tag in updated_article.article_tags]
-            author = await UserQueries.get_user_by_id(UUID(request.auth.sub), session)
-            is_following = await UserQueries.is_following(author.id, author.id, session)
-            profile = ProfileResponse(
-                username=author.username,
-                bio=author.bio,
-                image=author.image,
-                following=is_following,
-            )
-            is_favorited = await FavoriteQueries.get_favorite(
-                article.id, author.id, session
-            )
-            favorites_count = await FavoriteQueries.get_favorites_count(
-                article.id, session
-            )
-
-            response = ArticleResponse(
-                slug=updated_article.slug,
-                title=updated_article.title,
-                description=updated_article.description,
-                body=updated_article.body,
-                tag_list=tags,
-                created_at=updated_article.created_at,
-                updated_at=updated_article.updated_at,
-                favorited=is_favorited,
-                favorites_count=favorites_count,
-                author=profile,
+            response = await self._make_article_response(
+                updated_article, request, session
             )
             return ArticleResponseWrapper(article=response)
 
@@ -337,10 +313,10 @@ class ArticleController(Controller):
             )
             return ArticleResponseWrapper(article=response)
 
-    @delete(path="/{slug:str}/favorite")
+    @delete(path="/{slug:str}/favorite", status_code=HTTP_200_OK)
     async def unfavorite_article(
         self, slug: str, request: Request[User, Token, Any], state: State
-    ) -> None:
+    ) -> ArticleResponseWrapper:
         async with sessionmaker(bind=state.engine) as session:
             article = await ArticleQueries.get_article_by_slug(slug, session)
             if article is None:
@@ -349,3 +325,6 @@ class ArticleController(Controller):
             _ = await FavoriteQueries.delete_favorite(
                 article.id, UUID(request.auth.sub), session
             )
+            await session.refresh(article)
+            response = await self._make_article_response(article, request, session)
+            return ArticleResponseWrapper(article=response)
