@@ -55,6 +55,10 @@ class CommentResponse(Struct, rename="camel"):
     author: ProfileResponse
 
 
+class CommentResponseWrapper(Struct):
+    comment: CommentResponse
+
+
 class CommentListResponse(Struct):
     comments: list[CommentResponse]
 

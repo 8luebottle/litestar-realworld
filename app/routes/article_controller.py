@@ -28,6 +28,7 @@ from app.schemas.response_schemas import (
     ArticleResponseWrapper,
     CommentListResponse,
     CommentResponse,
+    CommentResponseWrapper,
     ProfileResponse,
 )
 
@@ -202,13 +203,14 @@ class ArticleController(Controller):
                 image=author_profile.image,
                 following=is_following,
             )
-            return CommentResponse(
+            response = CommentResponse(
                 id=new_comment.id,
                 created_at=new_comment.created_at,
                 updated_at=new_comment.updated_at,
                 body=new_comment.body,
                 author=profile,
             )
+            return CommentResponseWrapper(comment=response)
 
     @get(path="/{slug:str}/comments", exclude_from_auth=True)
     async def get_comments(
@@ -226,9 +228,13 @@ class ArticleController(Controller):
             profiles = {}
             for id in user_ids:
                 author_profile = await UserQueries.get_by_id(id, session)
-                is_following = await UserQueries.is_following(
-                    request.auth.sub, author_profile.id, session
-                )
+                requesting_user = await authenticate_manually(request)
+                if requesting_user:
+                    is_following = await UserQueries.is_following(
+                        requesting_user.id, id, session
+                    )
+                else:
+                    is_following = False
                 profiles[id] = ProfileResponse(
                     username=author_profile.username,
                     bio=author_profile.bio,
