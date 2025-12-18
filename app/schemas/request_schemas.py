@@ -1,4 +1,4 @@
-from msgspec import Struct
+from msgspec import Struct, field
 
 
 class GetArticlesType(Struct):
@@ -18,7 +18,7 @@ class CreateArticleType(Struct):
     title: str
     description: str
     body: str
-    tag_list: list[str] | None = None
+    tag_list: list[str] | None = field(default=None, name="tagList")
 
 
 class CreateArticleWrapper(Struct):

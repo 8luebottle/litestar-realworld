@@ -47,7 +47,7 @@ class ArticleListResponse(Struct, rename="camel"):
     articles_count: int
 
 
-class CommentResponse(Struct):
+class CommentResponse(Struct, rename="camel"):
     id: int
     created_at: datetime
     updated_at: datetime
