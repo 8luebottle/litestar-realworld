@@ -90,8 +90,17 @@ class ArticleController(Controller):
             return ArticleListResponse(article_response, len(article_response))
 
     @get(path="/feed")
-    async def get_article_feed(self, query: GetFeedType) -> ArticleListResponse:
-        pass
+    async def get_article_feed(
+        self, query: GetFeedType, request: Request[User, Token, Any], state: State
+    ) -> ArticleListResponse:
+        async with sessionmaker(bind=state.engine) as session:
+            user_id = UUID(request.auth.sub)
+            articles = await ArticleQueries.get_article_feed(query, user_id, session)
+            article_response = [
+                await self._make_article_response(article, request, session)
+                for article in articles
+            ]
+            return ArticleListResponse(article_response, len(article_response))
 
     @get(path="/{slug:str}", exclude_from_auth=True)
     async def get_article(

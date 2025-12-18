@@ -59,7 +59,7 @@ class ArticleQueries:
     async def get_articles(
         cls, query: GetArticlesType, session: AsyncSession
     ) -> list[Article]:
-        stmt = select(Article).order_by(Article.created_at)
+        stmt = select(Article).order_by(Article.created_at.desc())
 
         if query.tag:
             stmt = stmt.join(Article.article_tags)
@@ -90,12 +90,13 @@ class ArticleQueries:
     ) -> list[Article]:
         stmt = (
             select(Article)
-            .order_by(Article.created_at)
-            .join(Article.author)
+            .join(UserFollow, Article.author == UserFollow.followed_user_id)
             .where(UserFollow.follower_user_id == user_id)
+            .order_by(Article.created_at.desc())
+            .offset(query.offset)
+            .limit(query.limit)
         )
 
-        stmt = stmt.offset(query.offset).limit(query.limit)
         result = await session.execute(stmt)
         return result.scalars().all()
 
