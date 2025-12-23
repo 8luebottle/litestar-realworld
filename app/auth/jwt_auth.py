@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from litestar import Request
 from litestar.connection import ASGIConnection
 from litestar.exceptions import NotFoundException
@@ -19,7 +21,7 @@ async def retrieve_user_handler(
     sessionmaker = async_sessionmaker(expire_on_commit=False)
     async with sessionmaker(bind=state.engine) as session:
         try:
-            user = await UserQueries.get_by_id(token.sub, session)
+            user = await UserQueries.get_by_id(UUID(token.sub), session)
             return user
         except NotFoundException:
             return None
