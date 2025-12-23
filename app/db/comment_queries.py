@@ -17,14 +17,17 @@ class CommentQueries:
         user_id: UUID,
         session: AsyncSession,
     ) -> Comment:
+        created_at = datetime.now()
         new_comment = Comment(
-            created_at=datetime.now(),
-            updated_at=datetime.now(),
+            created_at=created_at,
+            updated_at=created_at,
             body=comment.comment.body,
             article_id=article_id,
             author_id=user_id,
         )
         session.add(new_comment)
+        await session.flush()
+        await session.refresh(new_comment)
         await session.commit()
 
         return new_comment
