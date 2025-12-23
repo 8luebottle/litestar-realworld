@@ -82,7 +82,7 @@ class ArticleQueries:
 
         stmt = stmt.offset(query.offset).limit(query.limit)
         result = await session.execute(stmt)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     @classmethod
     async def get_article_feed(
@@ -98,7 +98,7 @@ class ArticleQueries:
         )
 
         result = await session.execute(stmt)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     @classmethod
     async def update_article(

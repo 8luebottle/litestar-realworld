@@ -40,11 +40,12 @@ class FavoriteQueries:
 
     @classmethod
     async def get_favorites_count(cls, article_id: UUID, session: AsyncSession) -> int:
-        count = await session.scalar(
+        result = await session.scalar(
             select(func.count())
             .select_from(UserFavorite)
             .filter(UserFavorite.article_id == article_id)
         )
+        count = result if result else 0
         return count
 
     @classmethod

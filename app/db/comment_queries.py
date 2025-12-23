@@ -39,10 +39,12 @@ class CommentQueries:
         comments = await session.execute(
             select(Comment).where(Comment.article_id == article_id)
         )
-        return comments.scalars().all()
+        return list(comments.scalars().all())
 
     @classmethod
-    async def get_comment_by_id(cls, comment_id: int, session: AsyncSession) -> Comment:
+    async def get_comment_by_id(
+        cls, comment_id: int, session: AsyncSession
+    ) -> Comment | None:
         comment = await session.execute(select(Comment).where(Comment.id == comment_id))
         return comment.scalar_one_or_none()
 
