@@ -48,14 +48,16 @@ class ArticleController(Controller):
         tags.sort()
         author = await UserQueries.get_user_by_id(article.author, session)
 
+        is_following, is_favorited = False, False
         requesting_user = await authenticate_manually(request)
         if requesting_user:
             is_following = await UserQueries.is_following(
                 requesting_user.id, author.id, session
             )
-        else:
-            is_following = False
-
+            favorite = await FavoriteQueries.get_favorite(
+                article.id, requesting_user.id, session
+            )
+            is_favorited = True if favorite else False
         profile = ProfileResponse(
             username=author.username,
             bio=author.bio,
@@ -72,7 +74,7 @@ class ArticleController(Controller):
             tag_list=tags,
             created_at=article.created_at,
             updated_at=article.updated_at,
-            favorited=False,
+            favorited=is_favorited,
             favorites_count=favorites_count,
             author=profile,
         )
