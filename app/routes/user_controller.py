@@ -9,7 +9,7 @@ from litestar.status_codes import HTTP_409_CONFLICT
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from app.auth.jwt_auth import ALGORITHM, SECRET, jwt_auth
+from app.auth.jwt_auth import jwt_auth
 from app.db.models import User
 from app.db.user_queries import UserQueries
 from app.schemas.request_schemas import (
@@ -18,6 +18,7 @@ from app.schemas.request_schemas import (
     UpdateUserWrapper,
 )
 from app.schemas.response_schemas import AuthenticatedUserResponse, UserWrapper
+from app.settings import settings
 
 sessionmaker = async_sessionmaker(expire_on_commit=False)
 
@@ -73,7 +74,7 @@ class UserController(Controller):
             username=request.user.username,
             bio=request.user.bio,
             image=request.user.image,
-            token=request.auth.encode(SECRET, ALGORITHM),
+            token=request.auth.encode(settings.JWT_SECRET, settings.JWT_ALGORITHM),
         )
         return UserWrapper(user=user)
 
@@ -84,5 +85,7 @@ class UserController(Controller):
         data = data.user
         async with sessionmaker(bind=state.engine) as session:
             updated_user = await UserQueries.update(request.auth.sub, data, session)
-        updated_user.token = request.auth.encode(SECRET, ALGORITHM)
+        updated_user.token = request.auth.encode(
+            settings.JWT_SECRET, settings.JWT_ALGORITHM
+        )
         return UserWrapper(user=updated_user)

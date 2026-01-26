@@ -9,9 +9,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from app.db.models import User
 from app.db.user_queries import UserQueries
 from app.schemas.response_schemas import AuthenticatedUserResponse
-
-SECRET = "dummy-secret"
-ALGORITHM = "HS256"
+from app.settings import settings
 
 
 async def retrieve_user_handler(
@@ -34,7 +32,9 @@ async def authenticate_manually(request: Request) -> User | None:
 
     try:
         token_str = auth_header[7:]
-        token = Token.decode(token_str, SECRET, algorithm=ALGORITHM)
+        token = Token.decode(
+            token_str, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM
+        )
         state = request.app.state
         sessionmaker = async_sessionmaker(expire_on_commit=False)
         async with sessionmaker(bind=state.engine) as session:
@@ -44,7 +44,7 @@ async def authenticate_manually(request: Request) -> User | None:
 
 
 jwt_auth = JWTAuth[User, Token](
-    token_secret=SECRET,
+    token_secret=settings.JWT_SECRET,
     retrieve_user_handler=retrieve_user_handler,
     exclude=["/schema", "/api/users", "api/users/login"],
 )

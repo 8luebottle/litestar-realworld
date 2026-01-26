@@ -11,15 +11,18 @@ from .routes.article_controller import ArticleController
 from .routes.profile_controller import ProfileController
 from .routes.tag_controller import TagController
 from .routes.user_controller import UserController
+from .settings import settings
+
+DB_URL = f"postgresql+psycopg://{settings.DB_USER}:{settings.DB_PASSWORD}@localhost:{settings.DB_HOSTPORT}/{settings.DB_USER}"
+print(DB_URL)
+print(settings.DEBUG)
 
 
 @asynccontextmanager
 async def db_connection(app: Litestar) -> AsyncGenerator[None, None]:
     engine = getattr(app.state, "engine", None)
     if engine is None:
-        engine = create_async_engine(
-            "postgresql+psycopg://testuser:testpass@localhost:5433/testdb", echo=True
-        )
+        engine = create_async_engine(DB_URL, echo=settings.DB_ECHO)
         app.state.engine = engine
 
     async with engine.begin() as conn:
@@ -41,5 +44,5 @@ app = Litestar(
     lifespan=[db_connection],
     on_app_init=[jwt_auth.on_app_init],
     openapi_config=openapi_config,
-    debug=True,
+    debug=settings.DEBUG,
 )

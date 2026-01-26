@@ -1,13 +1,12 @@
 services:
   postgres:
     image: postgres:16
-    container_name: realworldlitestar-test-db
+    container_name: realworldlitestar-${ENV}-db
     environment:
-      POSTGRES_USER: testuser
-      POSTGRES_PASSWORD: testpass
-      POSTGRES_DB: testdb
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5433:5432"
+      - "${DB_HOSTPORT}:${DB_CONTAINER_PORT}"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
