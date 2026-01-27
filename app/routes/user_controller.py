@@ -43,7 +43,7 @@ class UserController(Controller):
                     await session.flush()
             except IntegrityError:
                 raise HTTPException(
-                    "Username or email already in user", status_code=HTTP_409_CONFLICT
+                    "Username or email already in use", status_code=HTTP_409_CONFLICT
                 )
 
         new_jwt = jwt_auth.create_token(
