@@ -46,5 +46,5 @@ async def authenticate_manually(request: Request) -> User | None:
 jwt_auth = JWTAuth[User, Token](
     token_secret=settings.JWT_SECRET,
     retrieve_user_handler=retrieve_user_handler,
-    exclude=["/schema", "/api/users", "api/users/login"],
+    exclude=["/schema", "/api/users", "/api/users/login"],
 )

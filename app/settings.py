@@ -36,14 +36,13 @@ class Settings:
             )
         DEBUG = True if debug == "true" else False
 
-        DB_USER=getenv("DB_USER")
-        DB_PASSWORD=getenv("DB_PASSWORD")
-        DB_HOSTPORT=getenv("DB_HOSTPORT")
-        DB_CONTAINER_PORT=int(getenv("DB_CONTAINER_PORT"))
-        JWT_SECRET=getenv("JWT_SECRET")
-        JWT_ALGORITHM=getenv("JWT_ALGORITHM")
+        DB_USER = getenv("DB_USER")
+        DB_PASSWORD = getenv("DB_PASSWORD")
+        DB_HOSTPORT = getenv("DB_HOSTPORT")
+        DB_CONTAINER_PORT = int(getenv("DB_CONTAINER_PORT"))
+        JWT_SECRET = getenv("JWT_SECRET")
+        JWT_ALGORITHM = getenv("JWT_ALGORITHM")
         DB_URL = f"postgresql+psycopg://{DB_USER}:{DB_PASSWORD}@localhost:{DB_HOSTPORT}/{DB_USER}"
-
 
         return cls(
             DB_USER=DB_USER,
