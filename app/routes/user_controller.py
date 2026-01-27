@@ -30,9 +30,11 @@ class UserController(Controller):
         path="/users", exclude_from_auth=True, response_model=AuthenticatedUserResponse
     )
     async def create_user(self, data: CreateUserWrapper, state: State) -> UserWrapper:
-        data = data.user
         new_user = User(
-            username=data.username, email=data.email, password=data.password, bio=""
+            username=data.user.username,
+            email=data.user.email,
+            password=data.user.password,
+            bio="",
         )
         async with sessionmaker(bind=state.engine) as session:
             try:
@@ -59,9 +61,8 @@ class UserController(Controller):
 
     @post(path="/users/login")
     async def login_user(self, data: LoginWrapper, state: State) -> UserWrapper:
-        data = data.user
         async with sessionmaker(bind=state.engine) as session:
-            user, id = await UserQueries.get(data, session)
+            user, id = await UserQueries.get(data.user, session)
 
         response = jwt_auth.login(id, send_token_as_response_body=True)
         user.token = response.content["token"]
@@ -82,9 +83,10 @@ class UserController(Controller):
     async def update_user(
         self, data: UpdateUserWrapper, request: Request[User, Token, Any], state: State
     ) -> UserWrapper:
-        data = data.user
         async with sessionmaker(bind=state.engine) as session:
-            updated_user = await UserQueries.update(request.auth.sub, data, session)
+            updated_user = await UserQueries.update(
+                request.auth.sub, data.user, session
+            )
         updated_user.token = request.auth.encode(
             settings.JWT_SECRET, settings.JWT_ALGORITHM
         )
