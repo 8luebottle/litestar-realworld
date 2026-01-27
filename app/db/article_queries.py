@@ -24,8 +24,10 @@ class ArticleQueries:
     async def create_article(
         cls, user_id: str, article: CreateArticleType, session: AsyncSession
     ) -> Article:
-        slug = slugify(article.title)
         created_at = datetime.now()
+        slug = slugify(article.title)
+        if await cls.get_article_by_slug(slug, session) is not None:
+            slug = "".join([slug, created_at])
 
         new_article = Article(
             slug=slug,
