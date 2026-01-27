@@ -65,8 +65,14 @@ class UserController(Controller):
             user, id = await UserQueries.get(data.user, session)
 
         response = jwt_auth.login(id, send_token_as_response_body=True)
-        user.token = response.content["token"]
-        return UserWrapper(user=user)
+        user_data = AuthenticatedUserResponse(
+            email=user.email,
+            username=user.username,
+            bio=user.bio,
+            image=user.image,
+            token=response.content["token"],
+        )
+        return UserWrapper(user=user_data)
 
     @get(path="/user")
     async def get_current_user(self, request: Request[User, Token, Any]) -> UserWrapper:
@@ -87,7 +93,12 @@ class UserController(Controller):
             updated_user = await UserQueries.update(
                 request.auth.sub, data.user, session
             )
-        updated_user.token = request.auth.encode(
-            settings.JWT_SECRET, settings.JWT_ALGORITHM
+        updated_token = request.auth.encode(settings.JWT_SECRET, settings.JWT_ALGORITHM)
+        user_data = AuthenticatedUserResponse(
+            email=updated_user.email,
+            username=updated_user.username,
+            bio=updated_user.bio,
+            image=updated_user.image,
+            token=updated_token,
         )
-        return UserWrapper(user=updated_user)
+        return UserWrapper(user=user_data)

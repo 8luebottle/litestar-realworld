@@ -7,50 +7,29 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import User, UserFollow
 from app.schemas.request_schemas import LoginUserType, UpdateUserType
-from app.schemas.response_schemas import AuthenticatedUserResponse
 
 
 class UserQueries:
     @classmethod
-    async def get(
-        cls, user: LoginUserType, session: AsyncSession
-    ) -> tuple[AuthenticatedUserResponse, str]:
+    async def get(cls, user: LoginUserType, session: AsyncSession) -> tuple[User, str]:
         query = select(User).where(
             User.email == user.email and User.password == user.password
         )
         result = await session.execute(query)
         try:
             authed_user = result.scalar_one()
-            return (
-                AuthenticatedUserResponse(
-                    email=authed_user.email,
-                    username=authed_user.username,
-                    bio=authed_user.bio,
-                    image=authed_user.image,
-                    token="dummy_token",
-                ),
-                str(authed_user.id),
-            )
+            return (authed_user, str(authed_user.id))
         except NoResultFound as e:
             raise NotFoundException(
                 detail=f"User with {user.email=} and {user.password} not found."
             ) from e
 
     @classmethod
-    async def get_by_id(
-        cls, id: UUID, session: AsyncSession
-    ) -> AuthenticatedUserResponse:
+    async def get_by_id(cls, id: UUID, session: AsyncSession) -> User:
         query = select(User).where(User.id == id)
         result = await session.execute(query)
         try:
-            authed_user = result.scalar_one()
-            return AuthenticatedUserResponse(
-                email=authed_user.email,
-                username=authed_user.username,
-                bio=authed_user.bio,
-                image=authed_user.image,
-                token="dummy_token",
-            )
+            return result.scalar_one()
         except NoResultFound as e:
             raise NotFoundException(detail=f"User with {id=} not found.") from e
 
@@ -70,9 +49,7 @@ class UserQueries:
         return result.scalar_one_or_none()
 
     @classmethod
-    async def update(
-        cls, id: str, user: UpdateUserType, session: AsyncSession
-    ) -> AuthenticatedUserResponse:
+    async def update(cls, id: str, user: UpdateUserType, session: AsyncSession) -> User:
         user_to_update = await cls.get_user_by_id(UUID(id), session)
 
         if user.username is not None:
@@ -88,14 +65,7 @@ class UserQueries:
 
         await session.commit()
 
-        updated_user = await cls.get_by_id(UUID(id), session)
-        return AuthenticatedUserResponse(
-            email=updated_user.email,
-            username=updated_user.username,
-            bio=updated_user.bio,
-            image=updated_user.image,
-            token="dummy_token",
-        )
+        return await cls.get_by_id(UUID(id), session)
 
     @classmethod
     async def is_following(
