@@ -1,4 +1,5 @@
 from typing import Any
+from uuid import UUID
 
 from litestar import Controller, Request, delete, get, post
 from litestar.datastructures import State
@@ -53,7 +54,7 @@ class ProfileController(Controller):
             if not followed_id:
                 raise NotFoundException(f"No user with {username=} found")
 
-            await UserQueries.follow_user(follower_id, followed_id.id, session)
+            await UserQueries.follow_user(UUID(follower_id), followed_id.id, session)
             username = followed_id.username
             bio = followed_id.bio
             image = followed_id.image
@@ -65,14 +66,14 @@ class ProfileController(Controller):
     @delete(path="/{username:str}/follow", status_code=HTTP_200_OK)
     async def unfollow_user(
         self, username: str, request: Request[User, Token, Any], state: State
-    ) -> None:
+    ) -> ProfileResponseWrapper:
         async with sessionmaker(bind=state.engine) as session:
             follower_id = request.auth.sub
             followed_user = await UserQueries.get_by_username(username, session)
             if not followed_user:
                 raise NotFoundException(f"No user with {username=} found")
 
-            await UserQueries.delete_user(follower_id, followed_user.id, session)
+            await UserQueries.delete_user(UUID(follower_id), followed_user.id, session)
             await session.refresh(followed_user)
             username = followed_user.username
             bio = followed_user.bio
