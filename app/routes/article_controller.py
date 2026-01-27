@@ -107,7 +107,7 @@ class ArticleController(Controller):
     @get(path="/{slug:str}", exclude_from_auth=True)
     async def get_article(
         self, slug: str, request: Request[User, Token, Any], state: State
-    ) -> ArticleResponse:
+    ) -> ArticleResponseWrapper:
         async with sessionmaker(bind=state.engine) as session:
             article = await ArticleQueries.get_article_by_slug(slug, session)
             if article is None:
@@ -121,11 +121,11 @@ class ArticleController(Controller):
         data: CreateArticleWrapper,
         request: Request[User, Token, Any],
         state: State,
-    ) -> ArticleResponse:
-        data = data.article
+    ) -> ArticleResponseWrapper:
+        article_data = data.article
         async with sessionmaker(bind=state.engine) as session:
             new_article = await ArticleQueries.create_article(
-                request.auth.sub, data, session
+                request.auth.sub, article_data, session
             )
             tags = [tag.tag for tag in new_article.article_tags]
             author = await UserQueries.get_user_by_id(UUID(request.auth.sub), session)
@@ -159,7 +159,7 @@ class ArticleController(Controller):
         data: UpdateArticleType,
         request: Request[User, Token, Any],
         state: State,
-    ) -> ArticleResponse:
+    ) -> ArticleResponseWrapper:
         async with sessionmaker(bind=state.engine) as session:
             article = await ArticleQueries.get_article_by_slug(slug, session)
             if article is None:
@@ -194,7 +194,7 @@ class ArticleController(Controller):
         data: CommentType,
         request: Request[User, Token, Any],
         state: State,
-    ) -> CommentResponse:
+    ) -> CommentResponseWrapper:
         async with sessionmaker(bind=state.engine) as session:
             article = await ArticleQueries.get_article_by_slug(slug, session)
             if article is None:
@@ -285,7 +285,7 @@ class ArticleController(Controller):
     @post(path="/{slug:str}/favorite")
     async def favorite_article(
         self, slug: str, request: Request[User, Token, Any], state: State
-    ) -> ArticleResponse:
+    ) -> ArticleResponseWrapper:
         async with sessionmaker(bind=state.engine) as session:
             article = await ArticleQueries.get_article_by_slug(slug, session)
             if article is None:
@@ -304,7 +304,7 @@ class ArticleController(Controller):
             tags = [tag.tag for tag in article.article_tags]
             author = await UserQueries.get_user_by_id(article.author, session)
             is_following = await UserQueries.is_following(
-                request.auth.sub, author.id, session
+                UUID(request.auth.sub), author.id, session
             )
             profile = ProfileResponse(
                 username=author.username,
