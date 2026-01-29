@@ -6,23 +6,15 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import User, UserFollow
-from app.schemas.request_schemas import LoginUserType, UpdateUserType
+from app.schemas.request_schemas import UpdateUserType
 
 
 class UserQueries:
     @classmethod
-    async def get(cls, user: LoginUserType, session: AsyncSession) -> tuple[User, str]:
-        query = select(User).where(
-            User.email == user.email and User.password == user.password
-        )
+    async def get_by_email(cls, email: str, session: AsyncSession) -> User | None:
+        query = select(User).where(User.email == email)
         result = await session.execute(query)
-        try:
-            authed_user = result.scalar_one()
-            return (authed_user, str(authed_user.id))
-        except NoResultFound as e:
-            raise NotFoundException(
-                detail=f"User with {user.email=} and {user.password} not found."
-            ) from e
+        return result.scalar_one_or_none()
 
     @classmethod
     async def get_by_id(cls, id: UUID, session: AsyncSession) -> User:

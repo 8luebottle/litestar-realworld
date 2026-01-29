@@ -3,18 +3,20 @@ from typing import Any
 
 from litestar import Controller, Request, get, post, put
 from litestar.datastructures import State
-from litestar.exceptions import HTTPException
+from litestar.exceptions import HTTPException, NotFoundException
 from litestar.security.jwt import Token
 from litestar.status_codes import HTTP_409_CONFLICT
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.auth.jwt_auth import jwt_auth
+from app.auth.password_helper import PasswordHelper
 from app.db.models import User
 from app.db.user_queries import UserQueries
 from app.schemas.request_schemas import (
     CreateUserWrapper,
     LoginWrapper,
+    UpdateUserType,
     UpdateUserWrapper,
 )
 from app.schemas.response_schemas import AuthenticatedUserResponse, UserWrapper
@@ -30,10 +32,11 @@ class UserController(Controller):
         path="/users", exclude_from_auth=True, response_model=AuthenticatedUserResponse
     )
     async def create_user(self, data: CreateUserWrapper, state: State) -> UserWrapper:
+        pw_hash = PasswordHelper.hash(data.user.password)
         new_user = User(
             username=data.user.username,
             email=data.user.email,
-            password=data.user.password,
+            password=pw_hash,
             bio="",
         )
         async with sessionmaker(bind=state.engine) as session:
@@ -62,9 +65,24 @@ class UserController(Controller):
     @post(path="/users/login")
     async def login_user(self, data: LoginWrapper, state: State) -> UserWrapper:
         async with sessionmaker(bind=state.engine) as session:
-            user, id = await UserQueries.get(data.user, session)
+            user = await UserQueries.get_by_email(data.user.email, session)
 
-        response = jwt_auth.login(id, send_token_as_response_body=True)
+        exception_str = f"User with email: '{data.user.email}' and password: '{data.user.password}' not found"
+        if user is None:
+            raise NotFoundException(exception_str)
+
+        is_pw_correct = PasswordHelper.verify(user.password, data.user.password)
+        if not is_pw_correct:
+            raise NotFoundException(exception_str)
+
+        is_rehash_needed = PasswordHelper.is_rehash_needed(user.password)
+        if is_rehash_needed:
+            rehashed_pw = PasswordHelper.hash(data.user.password)
+            updated_password = UpdateUserType(password=rehashed_pw)
+            async with sessionmaker(bind=state.engine) as session:
+                user = await UserQueries.update(str(user.id), updated_password, session)
+
+        response = jwt_auth.login(str(user.id), send_token_as_response_body=True)
         user_data = AuthenticatedUserResponse(
             email=user.email,
             username=user.username,
