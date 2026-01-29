@@ -42,7 +42,7 @@ class UserQueries:
 
     @classmethod
     async def update(cls, id: str, user: UpdateUserType, session: AsyncSession) -> User:
-        user_to_update = await cls.get_user_by_id(UUID(id), session)
+        user_to_update = await cls.get_by_id(UUID(id), session)
 
         if user.username is not None:
             user_to_update.username = user.username

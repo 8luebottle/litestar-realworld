@@ -37,7 +37,7 @@ async def authenticate_manually(request: Request) -> User | None:
         state = request.app.state
         sessionmaker = async_sessionmaker(expire_on_commit=False)
         async with sessionmaker(bind=state.engine) as session:
-            return await UserQueries.get_user_by_id(token.sub, session)
+            return await UserQueries.get_by_id(token.sub, session)
     except (KeyError, ValueError, NotFoundException):
         return None
 

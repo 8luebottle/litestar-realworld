@@ -46,7 +46,7 @@ class ArticleController(Controller):
     ) -> ArticleResponse:
         tags = [tag.tag for tag in article.article_tags]
         tags.sort()
-        author = await UserQueries.get_user_by_id(article.author, session)
+        author = await UserQueries.get_by_id(article.author, session)
 
         is_following, is_favorited = False, False
         requesting_user = await authenticate_manually(request)
@@ -128,7 +128,7 @@ class ArticleController(Controller):
                 request.auth.sub, article_data, session
             )
             tags = [tag.tag for tag in new_article.article_tags]
-            author = await UserQueries.get_user_by_id(UUID(request.auth.sub), session)
+            author = await UserQueries.get_by_id(UUID(request.auth.sub), session)
             is_following = await UserQueries.is_following(author.id, author.id, session)
             profile = ProfileResponse(
                 username=author.username,
@@ -202,7 +202,7 @@ class ArticleController(Controller):
             new_comment = await CommentQueries.create_comment(
                 data, article.id, UUID(request.auth.sub), session
             )
-            author_profile = await UserQueries.get_user_by_id(
+            author_profile = await UserQueries.get_by_id(
                 new_comment.author_id, session
             )
             is_following = await UserQueries.is_following(
@@ -302,7 +302,7 @@ class ArticleController(Controller):
                 )
 
             tags = [tag.tag for tag in article.article_tags]
-            author = await UserQueries.get_user_by_id(article.author, session)
+            author = await UserQueries.get_by_id(article.author, session)
             is_following = await UserQueries.is_following(
                 UUID(request.auth.sub), author.id, session
             )
