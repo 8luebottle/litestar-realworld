@@ -202,9 +202,7 @@ class ArticleController(Controller):
             new_comment = await CommentQueries.create_comment(
                 data, article.id, UUID(request.auth.sub), session
             )
-            author_profile = await UserQueries.get_by_id(
-                new_comment.author_id, session
-            )
+            author_profile = await UserQueries.get_by_id(new_comment.author_id, session)
             is_following = await UserQueries.is_following(
                 author_profile.id, author_profile.id, session
             )

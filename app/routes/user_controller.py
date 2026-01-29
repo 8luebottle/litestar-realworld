@@ -6,7 +6,6 @@ from litestar.datastructures import State
 from litestar.exceptions import HTTPException, NotFoundException
 from litestar.security.jwt import Token
 from litestar.status_codes import HTTP_409_CONFLICT
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.auth.jwt_auth import jwt_auth
@@ -32,6 +31,16 @@ class UserController(Controller):
         path="/users", exclude_from_auth=True, response_model=AuthenticatedUserResponse
     )
     async def create_user(self, data: CreateUserWrapper, state: State) -> UserWrapper:
+        async with sessionmaker(bind=state.engine) as session:
+            user_with_email = await UserQueries.get_by_email(data.user.email, session)
+            user_with_username = await UserQueries.get_by_username(
+                data.user.username, session
+            )
+            if user_with_email is not None or user_with_username is not None:
+                raise HTTPException(
+                    "Username or email already in use", status_code=HTTP_409_CONFLICT
+                )
+
         pw_hash = PasswordHelper.hash(data.user.password)
         new_user = User(
             username=data.user.username,
@@ -40,14 +49,9 @@ class UserController(Controller):
             bio="",
         )
         async with sessionmaker(bind=state.engine) as session:
-            try:
-                async with session.begin():
-                    session.add(new_user)
-                    await session.flush()
-            except IntegrityError:
-                raise HTTPException(
-                    "Username or email already in use", status_code=HTTP_409_CONFLICT
-                )
+            session.add(new_user)
+            await session.commit()
+            await session.refresh(new_user)
 
         new_jwt = jwt_auth.create_token(
             identifier=str(new_user.id), token_expiration=timedelta(minutes=15)
