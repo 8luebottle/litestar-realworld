@@ -26,15 +26,6 @@ class UserQueries:
             raise NotFoundException(detail=f"User with {id=} not found.") from e
 
     @classmethod
-    async def get_user_by_id(cls, id: UUID, session: AsyncSession) -> User:
-        query = select(User).where(User.id == id)
-        result = await session.execute(query)
-        try:
-            return result.scalar_one()
-        except NoResultFound as e:
-            raise NotFoundException(detail=f"User with {id=} not found.") from e
-
-    @classmethod
     async def get_by_username(cls, username: str, session: AsyncSession) -> User | None:
         query = select(User).where(User.username == username)
         result = await session.execute(query)
