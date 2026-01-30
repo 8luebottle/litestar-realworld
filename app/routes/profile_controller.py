@@ -17,7 +17,7 @@ sessionmaker = async_sessionmaker(expire_on_commit=False)
 
 
 class ProfileController(Controller):
-    path = "api/profiles"
+    path = "/api/profiles"
 
     @get(path="/{username:str}", exclude_from_auth=True)
     async def get_profile(

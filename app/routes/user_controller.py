@@ -25,7 +25,7 @@ sessionmaker = async_sessionmaker(expire_on_commit=False)
 
 
 class UserController(Controller):
-    path = "api"
+    path = "/api"
 
     @post(
         path="/users", exclude_from_auth=True, response_model=AuthenticatedUserResponse

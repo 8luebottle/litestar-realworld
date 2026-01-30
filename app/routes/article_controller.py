@@ -36,7 +36,7 @@ sessionmaker = async_sessionmaker(expire_on_commit=False)
 
 
 class ArticleController(Controller):
-    path = "api/articles"
+    path = "/api/articles"
 
     async def _make_article_response(
         self,
