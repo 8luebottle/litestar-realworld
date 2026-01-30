@@ -79,7 +79,7 @@ class ArticleController(Controller):
             author=profile,
         )
 
-    @get()
+    @get(exclude_from_auth=True)
     async def get_articles(
         self, query: GetArticlesType, request: Request[User, Token, Any], state: State
     ) -> ArticleListResponse:
