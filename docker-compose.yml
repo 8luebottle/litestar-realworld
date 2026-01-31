@@ -1,4 +1,23 @@
 services:
+  app:
+    build: .
+    container_name: realworldlitestar-${ENV}-app
+    ports:
+      - "8000:8000"
+    environment:
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: ${DB_PORT}
+      DB_ECHO: ${DB_ECHO}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALGORITHM}
+      DEBUG: ${DEBUG}
+    depends_on:
+      - postgres
+    volumes:
+      - ./app:/app/app
+
   postgres:
     image: postgres:16
     container_name: realworldlitestar-${ENV}-db
@@ -6,7 +25,7 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "${DB_HOSTPORT}:${DB_CONTAINER_PORT}"
+      - "${DB_HOSTPORT}:${DB_PORT}"
     volumes:
       - pgdata:/var/lib/postgresql/data
 

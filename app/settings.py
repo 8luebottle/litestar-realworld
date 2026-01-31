@@ -8,10 +8,10 @@ load_dotenv()
 
 @dataclass
 class Settings:
+    DB_HOST: str
     DB_USER: str
     DB_PASSWORD: str
-    DB_HOSTPORT: str
-    DB_CONTAINER_PORT: int
+    DB_PORT: str
     DB_ECHO: bool
     DB_URL: str
 
@@ -36,19 +36,19 @@ class Settings:
             )
         DEBUG = True if debug == "true" else False
 
+        DB_HOST = getenv("DB_HOST")
         DB_USER = getenv("DB_USER")
         DB_PASSWORD = getenv("DB_PASSWORD")
-        DB_HOSTPORT = getenv("DB_HOSTPORT")
-        DB_CONTAINER_PORT = int(getenv("DB_CONTAINER_PORT"))
+        DB_PORT = getenv("DB_PORT")
         JWT_SECRET = getenv("JWT_SECRET")
         JWT_ALGORITHM = getenv("JWT_ALGORITHM")
-        DB_URL = f"postgresql+psycopg://{DB_USER}:{DB_PASSWORD}@localhost:{DB_HOSTPORT}/{DB_USER}"
+        DB_URL = f"postgresql+psycopg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_USER}"
 
         return cls(
+            DB_HOST=DB_HOST,
             DB_USER=DB_USER,
             DB_PASSWORD=DB_PASSWORD,
-            DB_HOSTPORT=DB_HOSTPORT,
-            DB_CONTAINER_PORT=DB_CONTAINER_PORT,
+            DB_PORT=DB_PORT,
             DB_ECHO=DB_ECHO,
             DB_URL=DB_URL,
             JWT_SECRET=JWT_SECRET,
