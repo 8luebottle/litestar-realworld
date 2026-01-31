@@ -24,6 +24,7 @@ from app.schemas.request_schemas import (
 )
 from app.schemas.response_schemas import (
     ArticleListResponse,
+    ArticleNoBodyResponse,
     ArticleResponse,
     ArticleResponseWrapper,
     CommentListResponse,
@@ -38,12 +39,12 @@ sessionmaker = async_sessionmaker(expire_on_commit=False)
 class ArticleController(Controller):
     path = "/api/articles"
 
-    async def _make_article_response(
+    async def _make_article_no_body_response(
         self,
         article: Article,
         request: Request[User, Token, Any],
         session: AsyncSession,
-    ) -> ArticleResponse:
+    ) -> ArticleNoBodyResponse:
         tags = [tag.tag for tag in article.article_tags]
         tags.sort()
         author = await UserQueries.get_by_id(article.author, session)
@@ -66,17 +67,38 @@ class ArticleController(Controller):
         )
         favorites_count = await FavoriteQueries.get_favorites_count(article.id, session)
 
-        return ArticleResponse(
+        return ArticleNoBodyResponse(
             slug=article.slug,
             title=article.title,
             description=article.description,
-            body=article.body,
             tag_list=tags,
             created_at=article.created_at,
             updated_at=article.updated_at,
             favorited=is_favorited,
             favorites_count=favorites_count,
             author=profile,
+        )
+
+    async def _make_article_response(
+        self,
+        article: Article,
+        request: Request[User, Token, Any],
+        session: AsyncSession,
+    ) -> ArticleResponse:
+        article_no_body = await self._make_article_no_body_response(
+            article, request, session
+        )
+        return ArticleResponse(
+            slug=article.slug,
+            title=article.title,
+            description=article.description,
+            body=article.body,
+            tag_list=article_no_body.tag_list,
+            created_at=article.created_at,
+            updated_at=article.updated_at,
+            favorited=article_no_body.favorited,
+            favorites_count=article_no_body.favorites_count,
+            author=article_no_body.author,
         )
 
     @get(exclude_from_auth=True)
@@ -86,7 +108,7 @@ class ArticleController(Controller):
         async with sessionmaker(bind=state.engine) as session:
             articles = await ArticleQueries.get_articles(query, session)
             article_response = [
-                await self._make_article_response(article, request, session)
+                await self._make_article_no_body_response(article, request, session)
                 for article in articles
             ]
             return ArticleListResponse(article_response, len(article_response))
@@ -99,7 +121,7 @@ class ArticleController(Controller):
             user_id = UUID(request.auth.sub)
             articles = await ArticleQueries.get_article_feed(query, user_id, session)
             article_response = [
-                await self._make_article_response(article, request, session)
+                await self._make_article_no_body_response(article, request, session)
                 for article in articles
             ]
             return ArticleListResponse(article_response, len(article_response))

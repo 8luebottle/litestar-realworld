@@ -27,7 +27,7 @@ class ArticleQueries:
         created_at = datetime.now()
         slug = slugify(article.title)
         if await cls.get_article_by_slug(slug, session) is not None:
-            slug = "".join([slug, created_at])
+            slug = "".join([slug, str(created_at)])
 
         new_article = Article(
             slug=slug,

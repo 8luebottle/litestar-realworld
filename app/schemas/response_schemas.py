@@ -29,11 +29,10 @@ class ProfileResponseWrapper(Struct):
     profile: ProfileResponse
 
 
-class ArticleResponse(Struct, rename="camel"):
+class ArticleNoBodyResponse(Struct, rename="camel"):
     slug: str
     title: str
     description: str
-    body: str
     tag_list: list[str]
     created_at: datetime
     updated_at: datetime
@@ -42,12 +41,16 @@ class ArticleResponse(Struct, rename="camel"):
     author: ProfileResponse
 
 
+class ArticleResponse(ArticleNoBodyResponse):
+    body: str
+
+
 class ArticleResponseWrapper(Struct):
     article: ArticleResponse
 
 
 class ArticleListResponse(Struct, rename="camel"):
-    articles: list[ArticleResponse]
+    articles: list[ArticleNoBodyResponse]
     articles_count: int
 
 
