@@ -2,6 +2,7 @@ services:
   app:
     build: .
     container_name: realworldlitestar-${ENV}-app
+    command: uv run litestar run --host 0.0.0.0 --port 8000
     ports:
       - "8000:8000"
     environment:
@@ -17,6 +18,27 @@ services:
       - postgres
     volumes:
       - ./app:/app/app
+
+  test:
+    build: .
+    container_name: realworldlitestar-${ENV}-test
+    command: pytest tests/
+    ports:
+      - "8000:8000"
+    environment:
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: ${DB_PORT}
+      DB_ECHO: ${DB_ECHO}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALGORITHM}
+      DEBUG: ${DEBUG}
+    depends_on:
+      - postgres
+    volumes:
+      - ./app:/app/app
+      - ./tests:/app/tests
 
   postgres:
     image: postgres:16

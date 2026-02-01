@@ -32,6 +32,9 @@ COPY . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked
 
+# Change ownership of /app to nonroot user
+RUN chown -R nonroot:nonroot /app
+
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 
@@ -43,6 +46,3 @@ USER nonroot
 
 # Expose port
 EXPOSE 8000
-
-# Run the application
-CMD ["uv", "run", "litestar", "run", "--host", "0.0.0.0", "--port", "8000"]
