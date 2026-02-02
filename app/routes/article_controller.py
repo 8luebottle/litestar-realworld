@@ -117,6 +117,7 @@ class ArticleController(Controller):
     async def get_article_feed(
         self, query: GetFeedType, request: Request[User, Token, Any], state: State
     ) -> ArticleListResponse:
+        print("\n\n\nhere!\n\n\n")
         async with sessionmaker(bind=state.engine) as session:
             user_id = UUID(request.auth.sub)
             articles = await ArticleQueries.get_article_feed(query, user_id, session)
