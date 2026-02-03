@@ -32,8 +32,9 @@ COPY . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked
 
-# Change ownership of /app to nonroot user
-RUN chown -R nonroot:nonroot /app
+# Change ownership of /app/app and /app/tests to nonroot user
+RUN chown -R nonroot:nonroot /app/app
+RUN chown -R nonroot:nonroot /app/tests
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"

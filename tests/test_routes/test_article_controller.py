@@ -1,19 +1,42 @@
 from litestar import Litestar
-from litestar.status_codes import HTTP_404_NOT_FOUND, HTTP_422_UNPROCESSABLE_ENTITY
-from litestar.testing import AsyncTestClient, RequestFactory
+from litestar.status_codes import HTTP_401_UNAUTHORIZED, HTTP_422_UNPROCESSABLE_ENTITY
+from litestar.testing import AsyncTestClient
+from sqlalchemy.ext.asyncio import async_sessionmaker
+
+from app.auth.jwt_auth import jwt_auth
+from app.db.models import User
+from app.main import app
 
 
-# async def test_get_article_feed_no_token(
-#     test_client: AsyncTestClient[Litestar],
-# ) -> None:
-#     response = await test_client.get("/api/feed")
+async def test_get_article_feed_no_token(
+    test_client: AsyncTestClient[Litestar],
+) -> None:
+    response = await test_client.get("/api/articles/feed")
 
-#     assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.status_code == HTTP_401_UNAUTHORIZED
 
 
 async def test_get_article_feed_invalid_request(
-    authed_test_client: AsyncTestClient[Litestar],
-) -> None:    
-    response = await authed_test_client.get("/api/feed/")
+    test_client: AsyncTestClient[Litestar],
+) -> None:
+    sessionmaker = async_sessionmaker(expire_on_commit=False, bind=app.state.engine)
+    async with sessionmaker() as session:
+        user = User(
+            username="mock_user",
+            email="mock@mock.com",
+            password="mock_pw",
+            bio="mock_bio",
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+
+    token = jwt_auth.create_token(identifier=str(user.id))
+
+    response = await test_client.get(
+        "/api/articles/feed/",
+        headers={"Authorization": f"Bearer {token}"},
+        params={"invalid": "key"},
+    )
 
     assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY

@@ -22,7 +22,7 @@ services:
   test:
     build: .
     container_name: realworldlitestar-${ENV}-test
-    command: pytest tests/
+    command: pytest tests/ -p no:cacheprovider
     ports:
       - "8000:8000"
     environment:
