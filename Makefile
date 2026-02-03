@@ -35,3 +35,5 @@ ruff:
 
 ty:
 	ty check
+
+lint: ruff ty
