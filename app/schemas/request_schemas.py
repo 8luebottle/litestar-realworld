@@ -1,4 +1,6 @@
-from msgspec import Struct, field
+from typing import Annotated
+
+from msgspec import Meta, Struct, field
 
 
 class GetArticlesType(Struct):
@@ -10,8 +12,8 @@ class GetArticlesType(Struct):
 
 
 class GetFeedType(Struct):
-    limit: int = 20
-    offset: int = 0
+    limit: Annotated[int, Meta(ge=1, le=250)] = 20
+    offset: Annotated[int, Meta(ge=0)] = 0
 
 
 class CreateArticleType(Struct):

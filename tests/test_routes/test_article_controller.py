@@ -34,9 +34,8 @@ async def test_get_article_feed_invalid_request(
     token = jwt_auth.create_token(identifier=str(user.id))
 
     response = await test_client.get(
-        "/api/articles/feed/",
+        "/api/articles/feed/?limit=-1",
         headers={"Authorization": f"Bearer {token}"},
-        params={"invalid": "key"},
     )
 
     assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY

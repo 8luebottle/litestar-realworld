@@ -3,11 +3,13 @@ from contextlib import asynccontextmanager
 
 from litestar import Litestar
 from litestar.config.cors import CORSConfig
+from litestar.exceptions import ValidationException
 from litestar.openapi.config import OpenAPIConfig
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from .auth.jwt_auth import jwt_auth
 from .db.models import Base
+from .exception_handlers import validation_exception_handler
 from .routes.article_controller import ArticleController
 from .routes.profile_controller import ProfileController
 from .routes.tag_controller import TagController
@@ -45,5 +47,6 @@ app = Litestar(
     on_app_init=[jwt_auth.on_app_init],
     openapi_config=openapi_config,
     cors_config=cors_config,
+    exception_handlers={ValidationException: validation_exception_handler},
     debug=settings.DEBUG,
 )

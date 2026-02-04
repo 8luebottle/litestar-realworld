@@ -1,9 +1,10 @@
-from typing import Any
+from typing import Annotated, Any
 from uuid import UUID
 
 from litestar import Controller, Request, delete, get, post, put
 from litestar.datastructures import State
 from litestar.exceptions import HTTPException, NotAuthorizedException, NotFoundException
+from litestar.params import Parameter
 from litestar.security.jwt import Token
 from litestar.status_codes import HTTP_200_OK, HTTP_409_CONFLICT
 from sqlalchemy.exc import IntegrityError
@@ -115,9 +116,13 @@ class ArticleController(Controller):
 
     @get(path="/feed")
     async def get_article_feed(
-        self, query: GetFeedType, request: Request[User, Token, Any], state: State
+        self,
+        request: Request[User, Token, Any],
+        state: State,
+        limit: Annotated[int, Parameter(ge=1, le=250)] = 20,
+        offset: Annotated[int, Parameter(ge=0)] = 0,
     ) -> ArticleListResponse:
-        print("\n\n\nhere!\n\n\n")
+        query = GetFeedType(limit, offset)
         async with sessionmaker(bind=state.engine) as session:
             user_id = UUID(request.auth.sub)
             articles = await ArticleQueries.get_article_feed(query, user_id, session)
