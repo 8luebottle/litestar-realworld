@@ -1,3 +1,4 @@
+import pytest
 from litestar import Litestar
 from litestar.status_codes import HTTP_401_UNAUTHORIZED, HTTP_422_UNPROCESSABLE_ENTITY
 from litestar.testing import AsyncTestClient
@@ -16,8 +17,19 @@ async def test_get_article_feed_no_token(
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
 
+@pytest.mark.parametrize(
+    "query_str,expected",
+    [
+        (
+            "limit=-1&offset=-1",
+            "{'errors': {'limit': 'Expected `int` >= 1', 'offset': 'Expected `int` >= 0'}}",
+        ),
+        ("limit=-1", "{'errors': {'limit': 'Expected `int` >= 1'}}"),
+        ("offset=-1", "{'errors': {'offset': 'Expected `int` >= 0'}}"),
+    ],
+)
 async def test_get_article_feed_invalid_request(
-    test_client: AsyncTestClient[Litestar],
+    query_str: str, expected: str, test_client: AsyncTestClient[Litestar]
 ) -> None:
     sessionmaker = async_sessionmaker(expire_on_commit=False, bind=app.state.engine)
     async with sessionmaker() as session:
@@ -34,8 +46,9 @@ async def test_get_article_feed_invalid_request(
     token = jwt_auth.create_token(identifier=str(user.id))
 
     response = await test_client.get(
-        "/api/articles/feed/?limit=-1",
+        f"/api/articles/feed/?{query_str}",
         headers={"Authorization": f"Bearer {token}"},
     )
 
     assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+    assert str(response.content, "utf-8") == expected

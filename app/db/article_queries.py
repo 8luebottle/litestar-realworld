@@ -11,7 +11,6 @@ from app.db.models import Article, ArticleTag, UserFavorite, UserFollow
 from app.schemas.request_schemas import (
     CreateArticleType,
     GetArticlesType,
-    GetFeedType,
     UpdateArticleType,
 )
 
@@ -88,15 +87,15 @@ class ArticleQueries:
 
     @classmethod
     async def get_article_feed(
-        cls, query: GetFeedType, user_id: UUID, session: AsyncSession
+        cls, limit: int, offset: int, user_id: UUID, session: AsyncSession
     ) -> list[Article]:
         stmt = (
             select(Article)
             .join(UserFollow, Article.author == UserFollow.followed_user_id)
             .where(UserFollow.follower_user_id == user_id)
             .order_by(Article.created_at.desc())
-            .offset(query.offset)
-            .limit(query.limit)
+            .offset(offset)
+            .limit(limit)
         )
 
         result = await session.execute(stmt)

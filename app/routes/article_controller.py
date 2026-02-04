@@ -20,7 +20,6 @@ from app.schemas.request_schemas import (
     CommentType,
     CreateArticleWrapper,
     GetArticlesType,
-    GetFeedType,
     UpdateArticleType,
 )
 from app.schemas.response_schemas import (
@@ -122,10 +121,11 @@ class ArticleController(Controller):
         limit: Annotated[int, Parameter(ge=1, le=250)] = 20,
         offset: Annotated[int, Parameter(ge=0)] = 0,
     ) -> ArticleListResponse:
-        query = GetFeedType(limit, offset)
         async with sessionmaker(bind=state.engine) as session:
             user_id = UUID(request.auth.sub)
-            articles = await ArticleQueries.get_article_feed(query, user_id, session)
+            articles = await ArticleQueries.get_article_feed(
+                limit, offset, user_id, session
+            )
             article_response = [
                 await self._make_article_no_body_response(article, request, session)
                 for article in articles
