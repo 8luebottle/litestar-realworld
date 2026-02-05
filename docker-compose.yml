@@ -17,7 +17,7 @@ services:
     depends_on:
       - postgres
     volumes:
-      - ./app:/app/app
+      - ./app:/app/Conduit
 
   test:
     build: .
@@ -37,7 +37,7 @@ services:
     depends_on:
       - postgres
     volumes:
-      - ./app:/app/app
+      - ./Conduit:/app/Conduit
       - ./tests:/app/tests
 
   postgres:

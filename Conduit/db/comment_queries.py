@@ -4,8 +4,8 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import Comment
-from app.schemas.request_schemas import CommentType
+from Conduit.db.models import Comment
+from Conduit.schemas.request_schemas import CommentType
 
 
 class CommentQueries:

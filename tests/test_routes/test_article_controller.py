@@ -4,9 +4,9 @@ from litestar.status_codes import HTTP_401_UNAUTHORIZED, HTTP_422_UNPROCESSABLE_
 from litestar.testing import AsyncTestClient
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from app.auth.jwt_auth import jwt_auth
-from app.db.models import User
-from app.main import app
+from Conduit.auth.jwt_auth import jwt_auth
+from Conduit.db.models import User
+from Conduit.main import app
 
 
 async def test_get_article_feed_no_token(

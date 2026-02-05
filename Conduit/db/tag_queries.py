@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import ArticleTag, Tag
+from Conduit.db.models import ArticleTag, Tag
 
 
 class TagQueries:

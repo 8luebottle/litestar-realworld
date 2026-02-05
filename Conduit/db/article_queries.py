@@ -7,8 +7,8 @@ from slugify import slugify
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import Article, ArticleTag, UserFavorite, UserFollow
-from app.schemas.request_schemas import (
+from Conduit.db.models import Article, ArticleTag, UserFavorite, UserFollow
+from Conduit.schemas.request_schemas import (
     CreateArticleType,
     GetArticlesType,
     UpdateArticleType,

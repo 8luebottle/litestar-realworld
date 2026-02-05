@@ -6,9 +6,9 @@ from litestar.exceptions import NotFoundException
 from litestar.security.jwt import JWTAuth, Token
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from app.db.models import User
-from app.db.user_queries import UserQueries
-from app.settings import settings
+from Conduit.db.models import User
+from Conduit.db.user_queries import UserQueries
+from Conduit.settings import settings
 
 
 async def retrieve_user_handler(

@@ -10,19 +10,19 @@ from litestar.status_codes import HTTP_200_OK, HTTP_409_CONFLICT
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.auth.jwt_auth import authenticate_manually
-from app.db.article_queries import ArticleQueries
-from app.db.comment_queries import CommentQueries
-from app.db.favorite_queries import FavoriteQueries
-from app.db.models import Article, User
-from app.db.user_queries import UserQueries
-from app.schemas.request_schemas import (
+from Conduit.auth.jwt_auth import authenticate_manually
+from Conduit.db.article_queries import ArticleQueries
+from Conduit.db.comment_queries import CommentQueries
+from Conduit.db.favorite_queries import FavoriteQueries
+from Conduit.db.models import Article, User
+from Conduit.db.user_queries import UserQueries
+from Conduit.schemas.request_schemas import (
     CommentType,
     CreateArticleWrapper,
     GetArticlesType,
     UpdateArticleType,
 )
-from app.schemas.response_schemas import (
+from Conduit.schemas.response_schemas import (
     ArticleListResponse,
     ArticleNoBodyResponse,
     ArticleResponse,

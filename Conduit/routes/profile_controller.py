@@ -8,10 +8,10 @@ from litestar.security.jwt import Token
 from litestar.status_codes import HTTP_200_OK
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from app.auth.jwt_auth import authenticate_manually
-from app.db.models import User
-from app.db.user_queries import UserQueries
-from app.schemas.response_schemas import ProfileResponse, ProfileResponseWrapper
+from Conduit.auth.jwt_auth import authenticate_manually
+from Conduit.db.models import User
+from Conduit.db.user_queries import UserQueries
+from Conduit.schemas.response_schemas import ProfileResponse, ProfileResponseWrapper
 
 sessionmaker = async_sessionmaker(expire_on_commit=False)
 

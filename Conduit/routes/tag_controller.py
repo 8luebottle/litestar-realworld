@@ -2,8 +2,8 @@ from litestar import Controller, get
 from litestar.datastructures import State
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from app.db.tag_queries import TagQueries
-from app.schemas.response_schemas import TagListResponse
+from Conduit.db.tag_queries import TagQueries
+from Conduit.schemas.response_schemas import TagListResponse
 
 sessionmaker = async_sessionmaker(expire_on_commit=False)
 

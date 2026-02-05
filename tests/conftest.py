@@ -5,8 +5,8 @@ from litestar import Litestar
 from litestar.testing import AsyncTestClient
 from pytest import fixture
 
-from app.db.models import Base
-from app.main import app
+from Conduit.db.models import Base
+from Conduit.main import app
 
 
 @fixture(scope="function")

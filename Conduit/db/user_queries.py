@@ -5,8 +5,8 @@ from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import User, UserFollow
-from app.schemas.request_schemas import UpdateUserType
+from Conduit.db.models import User, UserFollow
+from Conduit.schemas.request_schemas import UpdateUserType
 
 
 class UserQueries:
