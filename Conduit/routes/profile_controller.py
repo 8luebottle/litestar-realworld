@@ -73,7 +73,9 @@ class ProfileController(Controller):
             if not followed_user:
                 raise NotFoundException(f"No user with {username=} found")
 
-            await UserQueries.delete_user(UUID(follower_id), followed_user.id, session)
+            await UserQueries.delete_user_follow(
+                UUID(follower_id), followed_user.id, session
+            )
             await session.refresh(followed_user)
             username = followed_user.username
             bio = followed_user.bio

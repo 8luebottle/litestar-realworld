@@ -88,7 +88,7 @@ class UserQueries:
         await session.commit()
 
     @classmethod
-    async def delete_user(
+    async def delete_user_follow(
         cls, follower_id: UUID, followed_id: UUID, session: AsyncSession
     ) -> None:
         existing = await session.execute(
