@@ -1,11 +1,14 @@
 services:
   app:
+    env_file:
+      - .env
     build: .
     container_name: realworldlitestar-${ENV}-app
     command: uv run litestar run --host 0.0.0.0 --port 8000
     ports:
       - "8000:8000"
     environment:
+      LITESTAR_APP: ${LITESTAR_APP}
       DB_HOST: ${DB_HOST:-postgres}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
@@ -17,9 +20,11 @@ services:
     depends_on:
       - postgres
     volumes:
-      - ./app:/app/Conduit
+      - ./Conduit:/app/Conduit
 
   test:
+    env_file:
+      - .env
     build: .
     container_name: realworldlitestar-${ENV}-test
     command: pytest tests/ -p no:cacheprovider
