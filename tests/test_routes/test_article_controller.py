@@ -9,6 +9,28 @@ from Conduit.db.models import User
 from Conduit.main import app
 
 
+@pytest.mark.parametrize(
+    "query_str,expected",
+    [
+        (
+            "limit=-1&offset=-1",
+            "{'errors': {'limit': 'Expected `int` >= 1', 'offset': 'Expected `int` >= 0'}}",
+        ),
+        ("limit=-1", "{'errors': {'limit': 'Expected `int` >= 1'}}"),
+        ("offset=-1", "{'errors': {'offset': 'Expected `int` >= 0'}}"),
+    ],
+)
+async def test_get_article_invalid_request(
+    query_str: str,
+    expected: str,
+    test_client: AsyncTestClient[Litestar],
+) -> None:
+    response = await test_client.get(f"/api/articles/?{query_str}")
+
+    assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+    assert str(response.content, "utf-8") == expected
+
+
 async def test_get_article_feed_no_token(
     test_client: AsyncTestClient[Litestar],
 ) -> None:

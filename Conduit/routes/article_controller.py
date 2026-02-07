@@ -19,7 +19,6 @@ from Conduit.db.user_queries import UserQueries
 from Conduit.schemas.request_schemas import (
     CommentType,
     CreateArticleWrapper,
-    GetArticlesType,
     UpdateArticleType,
 )
 from Conduit.schemas.response_schemas import (
@@ -103,10 +102,19 @@ class ArticleController(Controller):
 
     @get(exclude_from_auth=True)
     async def get_articles(
-        self, query: GetArticlesType, request: Request[User, Token, Any], state: State
+        self,
+        request: Request[User, Token, Any],
+        state: State,
+        author: str | None = None,
+        favorited: str | None = None,
+        tag: str | None = None,
+        limit: Annotated[int, Parameter(ge=1, le=250)] = 20,
+        offset: Annotated[int, Parameter(ge=0)] = 0,
     ) -> ArticleListResponse:
         async with sessionmaker(bind=state.engine) as session:
-            articles = await ArticleQueries.get_articles(query, session)
+            articles = await ArticleQueries.get_articles(
+                author, favorited, tag, limit, offset, session
+            )
             article_response = [
                 await self._make_article_no_body_response(article, request, session)
                 for article in articles

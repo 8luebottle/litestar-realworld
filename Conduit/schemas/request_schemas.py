@@ -1,14 +1,6 @@
 from msgspec import Struct, field
 
 
-class GetArticlesType(Struct):
-    tag: str | None = None
-    author: str | None = None
-    favorited: str | None = None
-    limit: int = 20
-    offset: int = 0
-
-
 class CreateArticleType(Struct):
     title: str
     description: str

@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from Conduit.db.models import Article, ArticleTag, UserFavorite, UserFollow
 from Conduit.schemas.request_schemas import (
     CreateArticleType,
-    GetArticlesType,
     UpdateArticleType,
 )
 
@@ -58,30 +57,36 @@ class ArticleQueries:
 
     @classmethod
     async def get_articles(
-        cls, query: GetArticlesType, session: AsyncSession
+        cls,
+        author: str | None,
+        favorited: str | None,
+        tag: str | None,
+        limit: int,
+        offset: int,
+        session: AsyncSession,
     ) -> list[Article]:
         stmt = select(Article).order_by(Article.created_at.desc())
 
-        if query.tag:
+        if tag:
             stmt = stmt.join(Article.article_tags)
-            stmt = stmt.where(ArticleTag.tag == query.tag)
-        if query.author:
-            author = await UserQueries.get_by_username(query.author, session)
-            if not author:
+            stmt = stmt.where(ArticleTag.tag == tag)
+        if author:
+            author_user = await UserQueries.get_by_username(author, session)
+            if not author_user:
                 raise NotFoundException(
                     "Author id not found", status_code=HTTP_404_NOT_FOUND
                 )
-            stmt = stmt.where(Article.author == author.id)
-        if query.favorited:
-            favorited = await UserQueries.get_by_username(query.favorited, session)
-            if not favorited:
+            stmt = stmt.where(Article.author == author_user.id)
+        if favorited:
+            favorited_user = await UserQueries.get_by_username(favorited, session)
+            if not favorited_user:
                 raise NotFoundException(
                     "Favorited id not found", status_code=HTTP_404_NOT_FOUND
                 )
             stmt = stmt.join(Article.favorites)
-            stmt = stmt.where(UserFavorite.user_id == favorited.id)
+            stmt = stmt.where(UserFavorite.user_id == favorited_user.id)
 
-        stmt = stmt.offset(query.offset).limit(query.limit)
+        stmt = stmt.offset(offset).limit(limit)
         result = await session.execute(stmt)
         return list(result.scalars().all())
 
