@@ -1,6 +1,10 @@
 import pytest
 from litestar import Litestar
-from litestar.status_codes import HTTP_401_UNAUTHORIZED, HTTP_422_UNPROCESSABLE_ENTITY
+from litestar.status_codes import (
+    HTTP_401_UNAUTHORIZED,
+    HTTP_404_NOT_FOUND,
+    HTTP_422_UNPROCESSABLE_ENTITY,
+)
 from litestar.testing import AsyncTestClient
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -20,7 +24,7 @@ from Conduit.main import app
         ("offset=-1", "{'errors': {'offset': 'Expected `int` >= 0'}}"),
     ],
 )
-async def test_get_article_invalid_request(
+async def test_get_articles_invalid_request(
     query_str: str,
     expected: str,
     test_client: AsyncTestClient[Litestar],
@@ -28,6 +32,24 @@ async def test_get_article_invalid_request(
     response = await test_client.get(f"/api/articles/?{query_str}")
 
     assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+    assert str(response.content, "utf-8") == expected
+
+
+@pytest.mark.parametrize(
+    "query_str,expected",
+    [
+        ("author=not here", '{"status_code":404,"detail":"Author id not found"}'),
+        ("favorited=not here", '{"status_code":404,"detail":"Favorited id not found"}'),
+    ],
+)
+async def test_get_articles_not_found(
+    query_str: str,
+    expected: str,
+    test_client: AsyncTestClient[Litestar],
+) -> None:
+    response = await test_client.get(f"/api/articles/?{query_str}")
+
+    assert response.status_code == HTTP_404_NOT_FOUND
     assert str(response.content, "utf-8") == expected
 
 
