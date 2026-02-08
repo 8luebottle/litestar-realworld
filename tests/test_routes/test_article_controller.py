@@ -145,7 +145,7 @@ async def test_update_article_slug_not_found(
 
 
 async def test_update_article_invalid_request(
-    test_client: AsyncTestClient, article_slug: str, author_token: str
+    test_client: AsyncTestClient[Litestar], article_slug: str, author_token: str
 ) -> None:
     response = await test_client.put(
         f"/api/articles/{article_slug}",
@@ -157,12 +157,42 @@ async def test_update_article_invalid_request(
 
 
 async def test_update_article_forbidden(
-    test_client: AsyncTestClient, token: str, article_slug: str
+    test_client: AsyncTestClient[Litestar], token: str, article_slug: str
 ) -> None:
     response = await test_client.put(
         f"/api/articles/{article_slug}",
         headers={"Authorization": f"Bearer {token}"},
         json={},
+    )
+
+    assert response.status_code == HTTP_403_FORBIDDEN
+
+
+async def test_delete_article_not_authorized(
+    test_client: AsyncTestClient[Litestar],
+) -> None:
+    response = await test_client.delete("/api/articles/non-existent-article")
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+async def test_delete_article_slug_not_found(
+    test_client: AsyncTestClient[Litestar], token: str
+) -> None:
+    response = await test_client.delete(
+        "/api/articles/non-existent-article",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+
+async def test_delete_article_forbidden(
+    test_client: AsyncTestClient[Litestar], token: str, article_slug: str
+) -> None:
+    response = await test_client.delete(
+        f"/api/articles/{article_slug}",
+        headers={"Authorization": f"Bearer {token}"},
     )
 
     assert response.status_code == HTTP_403_FORBIDDEN
