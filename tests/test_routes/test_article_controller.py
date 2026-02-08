@@ -123,3 +123,21 @@ async def test_create_article_invalid_request(
 
     assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
     assert str(response.content, "utf-8") == expected
+
+
+async def test_update_article_no_token(test_client: AsyncTestClient[Litestar]) -> None:
+    response = await test_client.put("/api/articles/non-existent")
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+async def test_update_article_slug_not_found(
+    test_client: AsyncTestClient[Litestar], token: str
+) -> None:
+    response = await test_client.put(
+        "/api/articles/non-existent-article",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"article": {}},
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
