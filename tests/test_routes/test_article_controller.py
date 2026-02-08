@@ -257,3 +257,58 @@ async def test_get_comments_slug_not_found(
     response = await test_client.get(f"{ENDPOINT}/non-existent-article/comments")
 
     assert response.status_code == HTTP_404_NOT_FOUND
+
+
+async def test_delete_comment_not_authorized(
+    test_client: AsyncTestClient[Litestar],
+) -> None:
+    response = await test_client.delete(f"{ENDPOINT}/non-existent-article/comments/1")
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+async def test_delete_comment_slug_not_found(
+    test_client: AsyncTestClient[Litestar],
+    token: str,
+) -> None:
+    response = await test_client.delete(
+        f"{ENDPOINT}/non-existent-article/comments/1",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert (
+        str(response.content, "utf-8")
+        == '{"status_code":404,"detail":"No article with slug=\'non-existent-article\' found"}'
+    )
+
+
+async def test_delete_comment_id_not_found(
+    test_client: AsyncTestClient[Litestar],
+    token: str,
+    article_slug: str,
+) -> None:
+    response = await test_client.delete(
+        f"{ENDPOINT}/{article_slug}/comments/0",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert (
+        str(response.content, "utf-8")
+        == '{"status_code":404,"detail":"No comment with id=0 found"}'
+    )
+
+
+async def test_delete_comment_forbidden(
+    test_client: AsyncTestClient[Litestar],
+    token: str,
+    article_slug: str,
+    comment_id: int,
+) -> None:
+    response = await test_client.delete(
+        f"{ENDPOINT}/{article_slug}/comments/{comment_id}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == HTTP_403_FORBIDDEN

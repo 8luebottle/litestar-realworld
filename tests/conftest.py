@@ -8,10 +8,15 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from Conduit.auth.jwt_auth import jwt_auth
 from Conduit.db.article_queries import ArticleQueries
+from Conduit.db.comment_queries import CommentQueries
 from Conduit.db.models import Base, User
 from Conduit.db.user_queries import UserQueries
 from Conduit.main import app
-from Conduit.schemas.request_schemas import CreateArticleType
+from Conduit.schemas.request_schemas import (
+    CommentBodyType,
+    CommentType,
+    CreateArticleType,
+)
 
 
 @fixture(scope="function")
@@ -71,6 +76,25 @@ async def author_token() -> str:
         if author is None:
             raise ValueError("`author_token` fixture could not find author")
         return jwt_auth.create_token(identifier=str(author.id))
+
+
+@fixture(scope="function")
+async def comment_id() -> int:
+    sessionmaker = async_sessionmaker(expire_on_commit=False, bind=app.state.engine)
+    async with sessionmaker() as session:
+        article = await ArticleQueries.get_article_by_slug("mock-article", session)
+        if article is None:
+            raise ValueError("`comment_id` fixture could not find article")
+
+        author = await UserQueries.get_by_username("mock_author", session)
+        if author is None:
+            raise ValueError("`comment_id` fixture could not find author")
+
+        comment_body = CommentType(CommentBodyType("mock comment"))
+        comment = await CommentQueries.create_comment(
+            comment_body, article.id, author.id, session
+        )
+        return comment.id
 
 
 @fixture(scope="function", autouse=True)
