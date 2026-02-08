@@ -4,6 +4,7 @@ import pytest
 from litestar import Litestar
 from litestar.status_codes import (
     HTTP_401_UNAUTHORIZED,
+    HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
@@ -141,3 +142,27 @@ async def test_update_article_slug_not_found(
     )
 
     assert response.status_code == HTTP_404_NOT_FOUND
+
+
+async def test_update_article_invalid_request(
+    test_client: AsyncTestClient, article_slug: str, author_token: str
+) -> None:
+    response = await test_client.put(
+        f"/api/articles/{article_slug}",
+        headers={"Authorization": f"Bearer {author_token}"},
+    )
+
+    assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+    assert str(response.content, "utf-8") == "{'errors': {'data': \"'data'\"}}"
+
+
+async def test_update_article_forbidden(
+    test_client: AsyncTestClient, token: str, article_slug: str
+) -> None:
+    response = await test_client.put(
+        f"/api/articles/{article_slug}",
+        headers={"Authorization": f"Bearer {token}"},
+        json={},
+    )
+
+    assert response.status_code == HTTP_403_FORBIDDEN

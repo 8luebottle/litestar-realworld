@@ -3,7 +3,11 @@ from uuid import UUID
 
 from litestar import Controller, Request, delete, get, post, put
 from litestar.datastructures import State
-from litestar.exceptions import HTTPException, NotAuthorizedException, NotFoundException
+from litestar.exceptions import (
+    HTTPException,
+    NotFoundException,
+    PermissionDeniedException,
+)
 from litestar.params import Parameter
 from litestar.security.jwt import Token
 from litestar.status_codes import HTTP_200_OK, HTTP_409_CONFLICT
@@ -201,7 +205,7 @@ class ArticleController(Controller):
             if article is None:
                 raise NotFoundException(f"No article with {slug=} found")
             if str(article.author) != request.auth.sub:
-                raise NotAuthorizedException("User not authorized to update article")
+                raise PermissionDeniedException("User not authorized to update article")
 
             updated_article = await ArticleQueries.update_article(slug, data, session)
             response = await self._make_article_response(
@@ -218,7 +222,7 @@ class ArticleController(Controller):
             if article is None:
                 raise NotFoundException(f"No article with {slug=} found")
             if str(article.author) != request.auth.sub:
-                raise NotAuthorizedException("User not authorized to delete article")
+                raise PermissionDeniedException("User not authorized to delete article")
 
             await ArticleQueries.delete_article(slug, session)
         return
@@ -312,7 +316,9 @@ class ArticleController(Controller):
                 raise NotFoundException(f"No comment with {id=} found")
 
             if str(comment.author_id) != request.auth.sub:
-                raise NotAuthorizedException("Only commenter can delete their comment")
+                raise PermissionDeniedException(
+                    "Only commenter can delete their comment"
+                )
 
             await CommentQueries.delete_comment(id, session)
 

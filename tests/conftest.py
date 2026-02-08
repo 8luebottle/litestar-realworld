@@ -7,8 +7,11 @@ from pytest import fixture
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from Conduit.auth.jwt_auth import jwt_auth
+from Conduit.db.article_queries import ArticleQueries
 from Conduit.db.models import Base, User
+from Conduit.db.user_queries import UserQueries
 from Conduit.main import app
+from Conduit.schemas.request_schemas import CreateArticleType
 
 
 @fixture(scope="function")
@@ -32,6 +35,42 @@ async def token() -> str:
         await session.refresh(user)
 
     return jwt_auth.create_token(identifier=str(user.id))
+
+
+@fixture(scope="function")
+async def article_slug() -> str:
+    sessionmaker = async_sessionmaker(expire_on_commit=False, bind=app.state.engine)
+    async with sessionmaker() as session:
+        user = User(
+            username="mock_author",
+            email="author@mock.com",
+            password="author_pw",
+            bio="author_bio",
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+
+        article_to_create = CreateArticleType(
+            title="mock article",
+            description="mock description",
+            body="mock body",
+            tag_list=["mock tag"],
+        )
+        article = await ArticleQueries.create_article(
+            str(user.id), article_to_create, session
+        )
+        return article.slug
+
+
+@fixture(scope="function")
+async def author_token() -> str:
+    sessionmaker = async_sessionmaker(expire_on_commit=False, bind=app.state.engine)
+    async with sessionmaker() as session:
+        author = await UserQueries.get_by_username("mock_author", session)
+        if author is None:
+            raise ValueError("`author_token` fixture could not find author")
+        return jwt_auth.create_token(identifier=str(author.id))
 
 
 @fixture(scope="function", autouse=True)
