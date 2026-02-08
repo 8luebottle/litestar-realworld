@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 from litestar import Litestar
 from litestar.status_codes import (
@@ -6,11 +8,6 @@ from litestar.status_codes import (
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 from litestar.testing import AsyncTestClient
-from sqlalchemy.ext.asyncio import async_sessionmaker
-
-from Conduit.auth.jwt_auth import jwt_auth
-from Conduit.db.models import User
-from Conduit.main import app
 
 
 @pytest.mark.parametrize(
@@ -73,22 +70,8 @@ async def test_get_article_feed_no_token(
     ],
 )
 async def test_get_article_feed_invalid_request(
-    query_str: str, expected: str, test_client: AsyncTestClient[Litestar]
+    query_str: str, expected: str, test_client: AsyncTestClient[Litestar], token: str
 ) -> None:
-    sessionmaker = async_sessionmaker(expire_on_commit=False, bind=app.state.engine)
-    async with sessionmaker() as session:
-        user = User(
-            username="mock_user",
-            email="mock@mock.com",
-            password="mock_pw",
-            bio="mock_bio",
-        )
-        session.add(user)
-        await session.commit()
-        await session.refresh(user)
-
-    token = jwt_auth.create_token(identifier=str(user.id))
-
     response = await test_client.get(
         f"/api/articles/feed/?{query_str}",
         headers={"Authorization": f"Bearer {token}"},
@@ -108,3 +91,35 @@ async def test_create_article_no_token(test_client: AsyncTestClient[Litestar]) -
     response = await test_client.post("/api/articles/")
 
     assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.parametrize(
+    "body,expected",
+    [
+        (
+            {"article": {"title": "mock title", "description": "mock description"}},
+            "{'errors': {'article': 'Object missing required field `body`'}}",
+        ),
+        (
+            {"article": {"description": "mock description", "body": "mock body"}},
+            "{'errors': {'article': 'Object missing required field `title`'}}",
+        ),
+        (
+            {"article": {"title": "mock title", "body": "mock body"}},
+            "{'errors': {'article': 'Object missing required field `description`'}}",
+        ),
+        ({}, "{'errors': {'data': 'Object missing required field `article`'}}"),
+    ],
+)
+async def test_create_article_invalid_request(
+    body: dict[str, Any],
+    expected: str,
+    test_client: AsyncTestClient[Litestar],
+    token: str,
+) -> None:
+    response = await test_client.post(
+        "/api/articles/", headers={"Authorization": f"Bearer {token}"}, json=body
+    )
+
+    assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+    assert str(response.content, "utf-8") == expected
