@@ -198,3 +198,54 @@ async def test_delete_article_forbidden(
     )
 
     assert response.status_code == HTTP_403_FORBIDDEN
+
+
+async def test_add_comment_not_found(
+    test_client: AsyncTestClient[Litestar], token: str
+) -> None:
+    response = await test_client.post(
+        f"{ENDPOINT}non-existent-article/comments",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"comment": {"body": "mock body"}},
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+
+async def test_add_comment_not_authorized(
+    test_client: AsyncTestClient[Litestar],
+) -> None:
+    response = await test_client.post(f"{ENDPOINT}non-existent-article/comments")
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.parametrize(
+    "body, expected",
+    [
+        (
+            {"comment": {"body": -1}},
+            "{'errors': {'comment.body': 'Expected `str`, got `int`'}}",
+        ),
+        (
+            {"comment": {}},
+            "{'errors': {'comment': 'Object missing required field `body`'}}",
+        ),
+        ({}, "{'errors': {'data': 'Object missing required field `comment`'}}"),
+    ],
+)
+async def test_add_comment_invalid_request(
+    body: dict[str, Any],
+    expected: str,
+    test_client: AsyncTestClient[Litestar],
+    token: str,
+    article_slug: str,
+) -> None:
+    response = await test_client.post(
+        f"{ENDPOINT}{article_slug}/comments",
+        headers={"Authorization": f"Bearer {token}"},
+        json=body,
+    )
+
+    assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+    assert str(response.content, "utf-8") == expected
