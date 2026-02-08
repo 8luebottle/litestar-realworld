@@ -96,3 +96,9 @@ async def test_get_article_feed_invalid_request(
 
     assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
     assert str(response.content, "utf-8") == expected
+
+
+async def test_get_article_not_found(test_client: AsyncTestClient[Litestar]) -> None:
+    response = await test_client.get("/api/articles/non-existent-article")
+
+    assert response.status_code == HTTP_404_NOT_FOUND
