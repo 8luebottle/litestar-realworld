@@ -10,7 +10,7 @@ from litestar.status_codes import (
 )
 from litestar.testing import AsyncTestClient
 
-ENDPOINT = "/api/articles/"
+ENDPOINT = "/api/articles"
 
 
 @pytest.mark.parametrize(
@@ -29,7 +29,7 @@ async def test_get_articles_invalid_request(
     expected: str,
     test_client: AsyncTestClient[Litestar],
 ) -> None:
-    response = await test_client.get(f"{ENDPOINT}?{query_str}")
+    response = await test_client.get(f"{ENDPOINT}/?{query_str}")
 
     assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
     assert str(response.content, "utf-8") == expected
@@ -47,7 +47,7 @@ async def test_get_articles_not_found(
     expected: str,
     test_client: AsyncTestClient[Litestar],
 ) -> None:
-    response = await test_client.get(f"{ENDPOINT}?{query_str}")
+    response = await test_client.get(f"{ENDPOINT}/?{query_str}")
 
     assert response.status_code == HTTP_404_NOT_FOUND
     assert str(response.content, "utf-8") == expected
@@ -56,7 +56,7 @@ async def test_get_articles_not_found(
 async def test_get_article_feed_no_token(
     test_client: AsyncTestClient[Litestar],
 ) -> None:
-    response = await test_client.get(f"{ENDPOINT}feed")
+    response = await test_client.get(f"{ENDPOINT}/feed")
 
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
@@ -76,7 +76,7 @@ async def test_get_article_feed_invalid_request(
     query_str: str, expected: str, test_client: AsyncTestClient[Litestar], token: str
 ) -> None:
     response = await test_client.get(
-        f"{ENDPOINT}feed/?{query_str}",
+        f"{ENDPOINT}/feed/?{query_str}",
         headers={"Authorization": f"Bearer {token}"},
     )
 
@@ -85,13 +85,13 @@ async def test_get_article_feed_invalid_request(
 
 
 async def test_get_article_not_found(test_client: AsyncTestClient[Litestar]) -> None:
-    response = await test_client.get(f"{ENDPOINT}non-existent-article")
+    response = await test_client.get(f"{ENDPOINT}/non-existent-article")
 
     assert response.status_code == HTTP_404_NOT_FOUND
 
 
 async def test_create_article_no_token(test_client: AsyncTestClient[Litestar]) -> None:
-    response = await test_client.post(f"{ENDPOINT}")
+    response = await test_client.post(f"{ENDPOINT}/")
 
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
@@ -121,7 +121,7 @@ async def test_create_article_invalid_request(
     token: str,
 ) -> None:
     response = await test_client.post(
-        f"{ENDPOINT}", headers={"Authorization": f"Bearer {token}"}, json=body
+        f"{ENDPOINT}/", headers={"Authorization": f"Bearer {token}"}, json=body
     )
 
     assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
@@ -129,7 +129,7 @@ async def test_create_article_invalid_request(
 
 
 async def test_update_article_no_token(test_client: AsyncTestClient[Litestar]) -> None:
-    response = await test_client.put(f"{ENDPOINT}non-existent-article")
+    response = await test_client.put(f"{ENDPOINT}/non-existent-article")
 
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
@@ -150,7 +150,7 @@ async def test_update_article_invalid_request(
     test_client: AsyncTestClient[Litestar], article_slug: str, author_token: str
 ) -> None:
     response = await test_client.put(
-        f"{ENDPOINT}{article_slug}",
+        f"{ENDPOINT}/{article_slug}",
         headers={"Authorization": f"Bearer {author_token}"},
     )
 
@@ -162,7 +162,7 @@ async def test_update_article_forbidden(
     test_client: AsyncTestClient[Litestar], token: str, article_slug: str
 ) -> None:
     response = await test_client.put(
-        f"{ENDPOINT}{article_slug}",
+        f"{ENDPOINT}/{article_slug}",
         headers={"Authorization": f"Bearer {token}"},
         json={},
     )
@@ -173,7 +173,7 @@ async def test_update_article_forbidden(
 async def test_delete_article_not_authorized(
     test_client: AsyncTestClient[Litestar],
 ) -> None:
-    response = await test_client.delete(f"{ENDPOINT}non-existent-article")
+    response = await test_client.delete(f"{ENDPOINT}/non-existent-article")
 
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
@@ -182,7 +182,7 @@ async def test_delete_article_slug_not_found(
     test_client: AsyncTestClient[Litestar], token: str
 ) -> None:
     response = await test_client.delete(
-        f"{ENDPOINT}non-existent-article",
+        f"{ENDPOINT}/non-existent-article",
         headers={"Authorization": f"Bearer {token}"},
     )
 
@@ -193,7 +193,7 @@ async def test_delete_article_forbidden(
     test_client: AsyncTestClient[Litestar], token: str, article_slug: str
 ) -> None:
     response = await test_client.delete(
-        f"{ENDPOINT}{article_slug}",
+        f"{ENDPOINT}/{article_slug}",
         headers={"Authorization": f"Bearer {token}"},
     )
 
@@ -204,7 +204,7 @@ async def test_add_comment_not_found(
     test_client: AsyncTestClient[Litestar], token: str
 ) -> None:
     response = await test_client.post(
-        f"{ENDPOINT}non-existent-article/comments",
+        f"{ENDPOINT}/non-existent-article/comments",
         headers={"Authorization": f"Bearer {token}"},
         json={"comment": {"body": "mock body"}},
     )
@@ -215,7 +215,7 @@ async def test_add_comment_not_found(
 async def test_add_comment_not_authorized(
     test_client: AsyncTestClient[Litestar],
 ) -> None:
-    response = await test_client.post(f"{ENDPOINT}non-existent-article/comments")
+    response = await test_client.post(f"{ENDPOINT}/non-existent-article/comments")
 
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
@@ -242,7 +242,7 @@ async def test_add_comment_invalid_request(
     article_slug: str,
 ) -> None:
     response = await test_client.post(
-        f"{ENDPOINT}{article_slug}/comments",
+        f"{ENDPOINT}/{article_slug}/comments",
         headers={"Authorization": f"Bearer {token}"},
         json=body,
     )
