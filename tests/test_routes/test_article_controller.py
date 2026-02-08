@@ -102,3 +102,9 @@ async def test_get_article_not_found(test_client: AsyncTestClient[Litestar]) -> 
     response = await test_client.get("/api/articles/non-existent-article")
 
     assert response.status_code == HTTP_404_NOT_FOUND
+
+
+async def test_create_article_no_token(test_client: AsyncTestClient[Litestar]) -> None:
+    response = await test_client.post("/api/articles/")
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
