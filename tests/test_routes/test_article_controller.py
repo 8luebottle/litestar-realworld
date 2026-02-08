@@ -249,3 +249,11 @@ async def test_add_comment_invalid_request(
 
     assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
     assert str(response.content, "utf-8") == expected
+
+
+async def test_get_comments_slug_not_found(
+    test_client: AsyncTestClient[Litestar],
+) -> None:
+    response = await test_client.get(f"{ENDPOINT}/non-existent-article/comments")
+
+    assert response.status_code == HTTP_404_NOT_FOUND
