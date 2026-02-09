@@ -312,3 +312,22 @@ async def test_delete_comment_forbidden(
     )
 
     assert response.status_code == HTTP_403_FORBIDDEN
+
+
+async def test_favorite_article_no_token(
+    test_client: AsyncTestClient[Litestar],
+) -> None:
+    response = await test_client.post(f"{ENDPOINT}/non-existent-article/favorite")
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+async def test_favorite_article_slug_not_found(
+    test_client: AsyncTestClient[Litestar], token: str
+) -> None:
+    response = await test_client.post(
+        f"{ENDPOINT}/non-existent-article/favorite",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
