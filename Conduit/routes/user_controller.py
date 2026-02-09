@@ -5,7 +5,7 @@ from litestar import Controller, Request, get, post, put
 from litestar.datastructures import State
 from litestar.exceptions import HTTPException, NotFoundException
 from litestar.security.jwt import Token
-from litestar.status_codes import HTTP_409_CONFLICT
+from litestar.status_codes import HTTP_422_UNPROCESSABLE_ENTITY
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from Conduit.auth.jwt_auth import jwt_auth
@@ -38,7 +38,8 @@ class UserController(Controller):
             )
             if user_with_email is not None or user_with_username is not None:
                 raise HTTPException(
-                    "Username or email already in use", status_code=HTTP_409_CONFLICT
+                    "Username or email already in use",
+                    status_code=HTTP_422_UNPROCESSABLE_ENTITY,
                 )
 
         pw_hash = PasswordHelper.hash(data.user.password)
