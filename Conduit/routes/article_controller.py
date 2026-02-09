@@ -4,14 +4,12 @@ from uuid import UUID
 from litestar import Controller, Request, delete, get, post, put
 from litestar.datastructures import State
 from litestar.exceptions import (
-    HTTPException,
     NotFoundException,
     PermissionDeniedException,
 )
 from litestar.params import Parameter
 from litestar.security.jwt import Token
-from litestar.status_codes import HTTP_200_OK, HTTP_409_CONFLICT
-from sqlalchemy.exc import IntegrityError
+from litestar.status_codes import HTTP_200_OK
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from Conduit.auth.jwt_auth import authenticate_manually
@@ -331,15 +329,9 @@ class ArticleController(Controller):
             if article is None:
                 raise NotFoundException(f"No article with {slug=} found")
 
-            try:
-                _ = await FavoriteQueries.create_favorite(
-                    article.id, UUID(request.auth.sub), session
-                )
-            except IntegrityError:
-                raise HTTPException(
-                    status_code=HTTP_409_CONFLICT,
-                    detail="Could not favorite article due to pre-existing favorite or other",
-                )
+            _ = await FavoriteQueries.create_favorite(
+                article.id, UUID(request.auth.sub), session
+            )
 
             tags = [tag.tag for tag in article.article_tags]
             author = await UserQueries.get_by_id(article.author, session)

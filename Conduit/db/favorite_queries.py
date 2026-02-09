@@ -11,6 +11,10 @@ class FavoriteQueries:
     async def create_favorite(
         cls, article_id: UUID, user_id: UUID, session: AsyncSession
     ) -> UserFavorite:
+        existing_favorite = await cls.get_favorite(article_id, user_id, session)
+        if existing_favorite is not None:
+            return existing_favorite
+
         new_favorite = UserFavorite(user_id=user_id, article_id=article_id)
         session.add(new_favorite)
         await session.commit()
