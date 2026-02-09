@@ -3,6 +3,7 @@ from typing import Any
 import pytest
 from litestar import Litestar
 from litestar.status_codes import (
+    HTTP_404_NOT_FOUND,
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 from litestar.testing import AsyncTestClient
@@ -54,4 +55,50 @@ async def test_create_user_invalid_request(
     response = await test_client.post(f"{USERS}", json=body)
 
     assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+    assert str(response.content, "utf-8") == expected
+
+
+@pytest.mark.parametrize(
+    "body,expected",
+    [
+        ({}, "{'errors': {'data': 'Object missing required field `user`'}}"),
+        ({"user": {}}, "{'errors': {'user': 'Object missing required field `email`'}}"),
+        (
+            {"user": {"email": ""}},
+            "{'errors': {'user': 'Object missing required field `password`'}}",
+        ),
+        (
+            {"user": {"password": ""}},
+            "{'errors': {'user': 'Object missing required field `email`'}}",
+        ),
+    ],
+)
+async def test_user_login_invalid_request(
+    body: dict[str, Any], expected: str, test_client: AsyncTestClient[Litestar]
+) -> None:
+    response = await test_client.post(f"{USERS}/login", json=body)
+
+    assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+    assert str(response.content, "utf-8") == expected
+
+
+@pytest.mark.parametrize(
+    "body,expected",
+    [
+        (
+            {"user": {"email": "not_used@mock.com", "password": "mock_pw"}},
+            '{"status_code":404,"detail":"User with email: \'not_used@mock.com\' and password: \'mock_pw\' not found"}',
+        ),
+        (
+            {"user": {"email": "mock@mock.com", "password": "wrong_pass"}},
+            '{"status_code":404,"detail":"User with email: \'mock@mock.com\' and password: \'wrong_pass\' not found"}',
+        ),
+    ],
+)
+async def test_user_login_not_found(
+    body: dict[str, Any], expected: str, test_client: AsyncTestClient
+) -> None:
+    response = await test_client.post(f"{USERS}/login", json=body)
+
+    assert response.status_code == HTTP_404_NOT_FOUND
     assert str(response.content, "utf-8") == expected
