@@ -3,6 +3,7 @@ from typing import Any
 import pytest
 from litestar import Litestar
 from litestar.status_codes import (
+    HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
@@ -102,3 +103,9 @@ async def test_user_login_not_found(
 
     assert response.status_code == HTTP_404_NOT_FOUND
     assert str(response.content, "utf-8") == expected
+
+
+async def test_get_current_user_no_token(test_client: AsyncTestClient) -> None:
+    response = await test_client.get(f"{USER}")
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
