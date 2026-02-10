@@ -1,5 +1,4 @@
-from collections.abc import AsyncGenerator, AsyncIterator
-from typing import Any
+from collections.abc import AsyncIterator
 
 from litestar import Litestar
 from litestar.testing import AsyncTestClient
@@ -9,7 +8,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from Conduit.auth.jwt_auth import jwt_auth
 from Conduit.db.article_queries import ArticleQueries
 from Conduit.db.comment_queries import CommentQueries
-from Conduit.db.models import Base, User
+from Conduit.db.models import User
 from Conduit.db.user_queries import UserQueries
 from Conduit.main import app
 from Conduit.schemas.request_schemas import (
@@ -19,13 +18,13 @@ from Conduit.schemas.request_schemas import (
 )
 
 
-@fixture(scope="function")
+@fixture(scope="session")
 async def test_client() -> AsyncIterator[AsyncTestClient[Litestar]]:
     async with AsyncTestClient(app=app) as client:
         yield client
 
 
-@fixture(scope="function")
+@fixture(scope="session")
 async def token() -> str:
     sessionmaker = async_sessionmaker(expire_on_commit=False, bind=app.state.engine)
     async with sessionmaker() as session:
@@ -42,7 +41,7 @@ async def token() -> str:
     return jwt_auth.create_token(identifier=str(user.id))
 
 
-@fixture(scope="function")
+@fixture(scope="session")
 async def article_slug() -> str:
     sessionmaker = async_sessionmaker(expire_on_commit=False, bind=app.state.engine)
     async with sessionmaker() as session:
@@ -68,7 +67,7 @@ async def article_slug() -> str:
         return article.slug
 
 
-@fixture(scope="function")
+@fixture(scope="session")
 async def author_token() -> str:
     sessionmaker = async_sessionmaker(expire_on_commit=False, bind=app.state.engine)
     async with sessionmaker() as session:
@@ -78,7 +77,7 @@ async def author_token() -> str:
         return jwt_auth.create_token(identifier=str(author.id))
 
 
-@fixture(scope="function")
+@fixture(scope="session")
 async def comment_id() -> int:
     sessionmaker = async_sessionmaker(expire_on_commit=False, bind=app.state.engine)
     async with sessionmaker() as session:
@@ -95,12 +94,3 @@ async def comment_id() -> int:
             comment_body, article.id, author.id, session
         )
         return comment.id
-
-
-@fixture(scope="function", autouse=True)
-async def clean_db() -> AsyncGenerator[Any, Any]:
-    yield
-    engine = app.state.engine
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)

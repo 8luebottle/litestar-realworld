@@ -18,7 +18,7 @@ USER = "/api/user"
     [("mock@mock.com", "not in use"), ("not_in_use@mock.com", "mock_user")],
 )
 async def test_create_user_username_email_in_user(
-    email: str, username: str, test_client: AsyncTestClient, token: str
+    email: str, username: str, test_client: AsyncTestClient
 ) -> None:
     new_user = {"user": {"email": email, "username": username, "password": "mock_pw"}}
 
@@ -146,8 +146,6 @@ async def test_update_user_invalid_request(
     expected: str,
     test_client: AsyncTestClient[Litestar],
     token: str,
-    article_slug: str,
-    author_token: str,
 ) -> None:
     response = await test_client.put(
         f"{USER}",
