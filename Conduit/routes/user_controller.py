@@ -6,6 +6,7 @@ from litestar.datastructures import State
 from litestar.exceptions import HTTPException, NotFoundException
 from litestar.security.jwt import Token
 from litestar.status_codes import HTTP_422_UNPROCESSABLE_ENTITY
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from Conduit.auth.jwt_auth import jwt_auth
@@ -113,9 +114,13 @@ class UserController(Controller):
         self, data: UpdateUserWrapper, request: Request[User, Token, Any], state: State
     ) -> UserWrapper:
         async with sessionmaker(bind=state.engine) as session:
-            updated_user = await UserQueries.update(
-                request.auth.sub, data.user, session
-            )
+            try:
+                updated_user = await UserQueries.update(
+                    request.auth.sub, data.user, session
+                )
+            except IntegrityError:
+                error_str = "Cannot use a username or email that is already in use"
+                raise HTTPException(detail=error_str, status_code=422)
         updated_token = request.auth.encode(settings.JWT_SECRET, settings.JWT_ALGORITHM)
         user_data = AuthenticatedUserResponse(
             email=updated_user.email,

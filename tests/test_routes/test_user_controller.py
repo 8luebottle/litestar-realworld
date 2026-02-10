@@ -117,3 +117,43 @@ async def test_update_user_no_token(test_client: AsyncTestClient[Litestar]) -> N
     response = await test_client.put(f"{USER}")
 
     assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.parametrize(
+    "body,expected",
+    [
+        ({}, "{'errors': {'data': 'Object missing required field `user`'}}"),
+        (
+            {"user": {"email": 1}},
+            "{'errors': {'user.email': 'Expected `str | null`, got `int`'}}",
+        ),
+        (
+            {"user": {"username": "mock_author"}},
+            '{"status_code":422,"detail":"Cannot use a username or email that is already in use"}',
+        ),
+        (
+            {"user": {"email": "author@mock.com"}},
+            '{"status_code":422,"detail":"Cannot use a username or email that is already in use"}',
+        ),
+        (
+            {"user": {"username": "mock_author", "email": "author@mock.com"}},
+            '{"status_code":422,"detail":"Cannot use a username or email that is already in use"}',
+        ),
+    ],
+)
+async def test_update_user_invalid_request(
+    body: dict[str, Any],
+    expected: str,
+    test_client: AsyncTestClient[Litestar],
+    token: str,
+    article_slug: str,
+    author_token: str,
+) -> None:
+    response = await test_client.put(
+        f"{USER}",
+        headers={"Authorization": f"Bearer {token}"},
+        json=body,
+    )
+
+    assert response.status_code == HTTP_422_UNPROCESSABLE_ENTITY
+    assert str(response.content, "utf-8") == expected
