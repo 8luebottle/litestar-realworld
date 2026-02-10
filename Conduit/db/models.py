@@ -17,7 +17,7 @@ class User(Base):
         pgUUID(as_uuid=True), primary_key=True, default=uuid4
     )
     username: Mapped[str] = mapped_column(String(30))
-    email: Mapped[str] = mapped_column(String(100))  # TODO: needs to be unique
+    email: Mapped[str] = mapped_column(String(100))
     password: Mapped[str] = mapped_column(String(100))
     bio: Mapped[str] = mapped_column(String(200))
     image: Mapped[str | None] = mapped_column(String(100))
