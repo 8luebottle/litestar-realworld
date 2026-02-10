@@ -105,7 +105,15 @@ async def test_user_login_not_found(
     assert str(response.content, "utf-8") == expected
 
 
-async def test_get_current_user_no_token(test_client: AsyncTestClient) -> None:
+async def test_get_current_user_no_token(
+    test_client: AsyncTestClient[Litestar],
+) -> None:
     response = await test_client.get(f"{USER}")
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+async def test_update_user_no_token(test_client: AsyncTestClient[Litestar]) -> None:
+    response = await test_client.put(f"{USER}")
 
     assert response.status_code == HTTP_401_UNAUTHORIZED
