@@ -5,43 +5,57 @@
 
 ### [Demo](https://demo.realworld.build/)&nbsp;&nbsp;&nbsp;&nbsp;[RealWorld](https://github.com/gothinkster/realworld)
 
+This codebase demonstrates a fully fledged backend application built with **Litestar** including CRUD operations, authentication, routing, pagination, and more.
 
-This codebase was created to demonstrate a fully fledged backend application built with **Litestar** including CRUD operations, authentication, routing, pagination, and more.
-
-We've gone to great lengths to adhere to the **Litestar** community styleguides & best practices.
-
-For more information on how to this works with other frontends/backends, head over to the [RealWorld](https://github.com/gothinkster/realworld) repo.
-
+For more information on how this works with other frontends/backends, head over to the [RealWorld](https://github.com/gothinkster/realworld) repo.
 
 # How it works
 
-This project uses the Litestar package to handle the routing and server creation. `msgspec` is used to define schemas for API requests and responses. SQLAlchemy is used to define the database models, and the database used in this project is PostgreSQL. There is a unit test suite which uses `pytest`, the codebase is formatted with `ruff` and type checked with `ty`.
+**Stack:**
+- [Litestar](https://litestar.dev) - ASGI framework for routing and server
+- [msgspec](https://jcristharif.com/msgspec/) - Fast serialization for request/response schemas
+- [SQLAlchemy](https://www.sqlalchemy.org/) - ORM with PostgreSQL
+- [pytest](https://pytest.org/) - Testing framework
+- [ruff](https://github.com/astral-sh/ruff) - Linting and formatting
+- [ty](https://github.com/astral-sh/ty) - Type checking
 
-The app lives within the `Conduit` directory, and is organized into `auth`, `db`, `routes`, and `schemas`.
+**Project structure:**
+```
+Conduit/
+├── auth/       # Authentication logic
+├── db/         # Database models and configuration
+├── routes/     # API endpoints
+├── schemas/    # Request/response schemas
+├── exception_handlers.py  # Exception handlers
+├── main.py     # Server startup logic
+└── settings.py # Auth, server, and database settings
 
-The unit test suite is written to test the unhappy path of each API endpoint. To test the happy path, the excellent Postman tests provided by the Realworld project are used (see `Conduit.postman_collection.json`).
+```
 
+The test suite covers unhappy paths for each endpoint. Happy path testing uses the official [RealWorld Postman collection](Conduit.postman_collection.json).
 
 # Getting started
 
-Ensure Docker and Make are installed. Create a `.env` file in the project's root directory to hold environment variables.
+**Prerequisites:** Docker and Make
 
+1. **Set up environment variables:**
 ```shell
-cat .env.example >> .env
+   cp .env.example .env
 ```
 
-To run tests, run:
-
+2. **Run tests:**
 ```shell
-make test
+   make test
 ```
 
-To run the server, run:
+3. **Start the server:**
 ```shell
-make up
+   make up
 ```
 
-To ensure the server has started correctly, run:
+4. **Verify it's running:**
 ```shell
-make logs
+   make logs
 ```
+
+The API will be available at `http://localhost:8000` (or check your `.env` for the configured port).
