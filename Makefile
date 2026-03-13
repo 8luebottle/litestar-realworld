@@ -31,9 +31,11 @@ reset-db: down-v build up
 
 # CI
 ruff:
-	ruff check --fix && ruff format
+	python3 -m ruff check --fix && python3 -m ruff format
 
 ty:
-	ty check
+	python3 -m ty check
 
 lint: ruff ty
+
+check: lint test
